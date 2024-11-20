@@ -1,6 +1,8 @@
 Function Upload
 
 Function Clean
+   Func Clean_Catch: Deny incorrect format file
+   Func 
 
 Function Train
 

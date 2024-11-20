@@ -125,87 +125,29 @@ df.shape
 df.iloc[0]
 
 
-# In[83]:
-
-
 # getting counts per columns and datatypes
 df.info()
 
 
-# ## Define Some Costume Functions to Examine Variables
+def plot_prediction_vs_test_categorical(y_test, y_pred, class_labels):
+   # Plots the prediction vs test data for categorical variables.
 
-# In[84]:
+   # Args:
+   #     y_test (array-like): True labels of the test data.
+   #     y_pred (array-like): Predicted labels of the test data.
+   #     class_labels (list): List of class labels.
 
+   # Create a confusion matrix
+   cm = confusion_matrix(y_test, y_pred)
 
-#   def plot_numerical_column(data_frame, Column_Name, n_bins):
-#   # Plot histogram and box plot for numerical columns
-#   # num_col: Numerical Column i.e. df['Age']
-#   # n_bins : number of bins
-#
-#      # Get data set
-#      data = data_frame[Column_Name]
-#       
-#      # Plotting histogram
-#      ####################
-#      # Plotting a basic histogram
-#      plt.hist(data, bins=n_bins, color='skyblue', edgecolor='black')
-#       
-#      # Adding labels and title
-#      plt.xlabel(Column_Name)
-#      plt.ylabel('Frequency')
-#      plt.title('Basic Histogram')
-#
-#      plt.show()
-#    
-#      # Plotting box plot
-#      ####################
-#      plt.boxplot(data)
-#      plt.ylabel(Column_Name)
-#      plt.ylim(data.min(), data.max()) 
-#      plt.title('Basic Boxplot')
-#      plt.show()
-#
-#      # Display the plot
-#      plt.show()
-#
-#
-#   def plot_no_numerical_column(data_frame, Column_Name):
-#   # Plot counts for no numerical cases
-#
-#      # Get data set
-#      data = data_frame[Column_Name]
-#
-#      occupation_count = data.value_counts()
-#      sns.barplot(x = occupation_count.values, y = occupation_count.index, orient = 'h')
-#      plt.xlabel('Count')
-#      plt.ylabel(Column_Name)
-#
-#      # Display the plot
-#      plt.show()
-#
-#
-#   # In[85]:
-#
-#
-#   # Function to evaluate predicted vs test data categorical variables
-   def plot_prediction_vs_test_categorical(y_test, y_pred, class_labels):
-       # Plots the prediction vs test data for categorical variables.
+   # Plot the confusion matrix
+   plt.figure(figsize=(8, 6))
+   sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
+   plt.xlabel("Predicted")
+   plt.ylabel("Actual")
+   plt.title("Confusion Matrix")
+   plt.show()
 
-       # Args:
-       #     y_test (array-like): True labels of the test data.
-       #     y_pred (array-like): Predicted labels of the test data.
-       #     class_labels (list): List of class labels.
-
-       # Create a confusion matrix
-       cm = confusion_matrix(y_test, y_pred)
-
-       # Plot the confusion matrix
-       plt.figure(figsize=(8, 6))
-       sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
-       plt.xlabel("Predicted")
-       plt.ylabel("Actual")
-       plt.title("Confusion Matrix")
-       plt.show()
 
 # Calculates performance of multivariate classification model
 def calculate_performance_multiclass(y_true, y_pred):
@@ -237,9 +179,6 @@ def calculate_performance_multiclass(y_true, y_pred):
 # ## Performing Basic Data Cleaning
 
 # ### Check for missing variables
-
-# In[86]:
-
 
 # This will count the number of missing values per column, we will handle tis at each column
 df.isna().sum()
@@ -505,9 +444,6 @@ df['Num_Credit_Card'].describe()
 
 # ### Interest Rate
 
-# In[112]:
-
-
 # get details on column
 df['Interest_Rate'].describe()
 
@@ -576,30 +512,12 @@ df['Credit_Mix'] = df['Credit_Mix'].astype("string")
 # get details on column
 df['Credit_Utilization_Ratio'].describe()
 
-
-# In[120]:
-
-
-# Check variable using plots:
-# plot_numerical_column(df, 'Credit_Utilization_Ratio', 30)
-
-
 # ### Credit Score
-
-# In[121]:
-
 
 # Casting to correct data type
 df['Credit_Score'] = df['Credit_Score'].astype("string")
 
-# Check variable using plots:
-# plot_no_numerical_column(df, 'Credit_Score')
-
-
 # ### Check for duplicates
-
-# In[122]:
-
 
 # This is only checking for exact duplicates. Are there duplicates that we are missing?
 #HINT What happens if a fire exists across multiple counties.
@@ -608,20 +526,9 @@ df.duplicated().sum()
 
 # ### Look at summary data
 
-# In[123]:
-
-
 df.describe()
 
-
-# In[124]:
-
-
 df.info()
-
-
-# In[125]:
-
 
 # We have selected some features below, you can add more.
 #HINT: look at the dtypes above
@@ -632,30 +539,9 @@ l_cols_categorical = ['Occupation', 'Credit_Mix']
 
 # ### Visualize variables
 
-# In[126]:
-
-
-# Check cross-correlation of numerical columns (use a spearman method because it is highly likely relationships are non-linear)
-#   df_corr = df[l_cols_numerical].corr(method='spearman')
-#   f, ax = plt.subplots(figsize=(11, 9))
-#   sns.heatmap(df_corr,
-#               mask=np.triu(np.ones_like(df_corr, dtype=bool)), 
-#               cmap=sns.diverging_palette(230, 20, as_cmap=True), 
-#               vmin=-1.0, vmax=1.0, center=0,
-#               square=True, linewidths=.5, cbar_kws={"shrink": .5})
-#   plt.show()
-
-
-# In[127]:
-
-
 # Look at Histograms
 df[l_cols_numerical].hist(xlabelsize =6)
 # plt.tight_layout()
-
-
-# In[128]:
-
 
 # Look at scattered plots
 axs = pd.plotting.scatter_matrix(df[l_cols_numerical], figsize=(10,10), marker = 'o', hist_kwds = {'bins': 10}, s = 60, alpha = 0.2)
@@ -676,42 +562,12 @@ for ax in axs[-1,:]: # the lower boundary
     ax.set_ylim([None, None])
 
 
-# In[129]:
-
-
 # Box plots for all variables 
 df[l_cols_numerical].boxplot(rot=90)
 
-
-# In[130]:
-
-
-# Plotting categorical variables
-#   for x in [*l_cols_categorical]:
-#       df[x].value_counts().plot(kind='barh')
-#       plt.show()
-
-
-# In[131]:
-
-
-# Feel free to generate any other visualizations that you're interested in to continue digging into the data.
-
-
 # ### Feature Derivation/Engineering
 
-# In[132]:
-
-
-# Perform any feature engineering and check with visualizations, recommend using a temporary dataframe for trial, 
-# and then putting the actual code into the feature_engineering function below to be able to replicate the same 
-# transformations to test data later on
-
-
 # ## Feature Selection
-
-# In[133]:
-
 
 # Drop costumer ID and cast ID
 df = df.drop(columns='Customer_ID')
@@ -721,17 +577,10 @@ df['ID'] = df['ID'].astype('string')
 # Getting information on the data frame
 df.info()
 
-
-# In[134]:
-
-
 # If you want to change the variables for your model, do that here!
 target = ['Credit_Score']
 continuous_features = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio'] 
 categorical_features = ['Occupation', 'Credit_Mix']
-
-
-# In[135]:
 
 
 # Encode variables to use in Neural Network
@@ -759,9 +608,6 @@ encoder = OneHotEncoder(handle_unknown='ignore')
 le = LabelEncoder()
 
 
-# In[136]:
-
-
 # Encoding categorical features
 encoded_features = encoder.fit_transform(df[categorical_features])
 
@@ -771,10 +617,6 @@ encoded_df = pd.DataFrame(encoded_features.toarray(), columns=encoder.get_featur
 # joining dataframes 
 df = pd.concat([df, encoded_df], axis=1)
 print(df.info())
-
-
-# In[137]:
-
 
 # Encoding categorical features
 encoded_target = encoder.fit_transform(df[target])
@@ -788,8 +630,6 @@ print(df.info())
 
 
 # ## Modeling
-
-# In[138]:
 
 
 # Constructing dataframe for modeling
@@ -806,9 +646,6 @@ target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Stand
 
 # Getting the size of input size
 print(len(features_for_model))
-
-
-# In[139]:
 
 
 # Defining data sets
@@ -834,17 +671,12 @@ print(X_test.shape)
 print(y_test.shape)
 
 
-# In[141]:
-
-
 # Printing X_train and y_train
 print(X_train)
 print(y_train)
 
 
 # ### Neural Network
-
-# In[142]:
 
 
 # Set up the layers
@@ -871,9 +703,6 @@ model.add(keras.layers.Dense(3, activation="softmax"))
 print(model.summary())
 
 
-# In[143]:
-
-
 # Compile the Model
 ###################
 # Before the model is ready for training, it needs a few more settings. These are added during the model's compile step:
@@ -885,9 +714,6 @@ print(model.summary())
 model.compile(optimizer='adam',
               loss=tf.keras.losses.CategoricalCrossentropy(),
               metrics=['accuracy'])
-
-
-# In[144]:
 
 
 # Train the Model
@@ -903,18 +729,10 @@ model.compile(optimizer='adam',
 model.fit(X_train, y_train, epochs = 12, batch_size = 20)
 
 
-# In[145]:
-
-
 #Evaluate accuracy
 test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
 print('\nTest accuracy:', test_acc)
 print('\nLoss:', test_loss)
-
-
-# ## Make Predictions
-
-# In[146]:
 
 
 # Make Predictions
@@ -926,9 +744,6 @@ print(predictions[10])
 print(predictions[100])
 print(predictions[1000])
 print(predictions[10000])
-
-
-# In[147]:
 
 
 # 3 different credit scores. You can see the comparison between the trained and tested values
@@ -948,9 +763,6 @@ for i in range(15):
 headers = ["True Value", "Predicted Value"]
 
 print(tabulate(data, headers=headers, tablefmt="grid"))
-
-
-# In[ ]:
 
 
 # Confusion Matrix
@@ -976,10 +788,7 @@ print(tabulate(data, headers=headers, tablefmt="grid"))
 # Class labels
 class_labels=['Good', 'Poor', 'Standard']
 
-# plot_prediction_vs_test_categorical(y_tested, y_predicted, class_labels)
-
-
-# In[149]:
+plot_prediction_vs_test_categorical(y_tested, y_predicted, class_labels)
 
 
 # Explanation of Metrics
