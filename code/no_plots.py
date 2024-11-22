@@ -188,24 +188,24 @@ df.info()
 #
 #
 #   # Function to evaluate predicted vs test data categorical variables
-   def plot_prediction_vs_test_categorical(y_test, y_pred, class_labels):
-       # Plots the prediction vs test data for categorical variables.
-
-       # Args:
-       #     y_test (array-like): True labels of the test data.
-       #     y_pred (array-like): Predicted labels of the test data.
-       #     class_labels (list): List of class labels.
-
-       # Create a confusion matrix
-       cm = confusion_matrix(y_test, y_pred)
-
-       # Plot the confusion matrix
-       plt.figure(figsize=(8, 6))
-       sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
-       plt.xlabel("Predicted")
-       plt.ylabel("Actual")
-       plt.title("Confusion Matrix")
-       plt.show()
+#   def plot_prediction_vs_test_categorical(y_test, y_pred, class_labels):
+#       # Plots the prediction vs test data for categorical variables.
+#
+#       # Args:
+#       #     y_test (array-like): True labels of the test data.
+#       #     y_pred (array-like): Predicted labels of the test data.
+#       #     class_labels (list): List of class labels.
+#
+#       # Create a confusion matrix
+#       cm = confusion_matrix(y_test, y_pred)
+#
+#       # Plot the confusion matrix
+#       plt.figure(figsize=(8, 6))
+#       sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
+#       plt.xlabel("Predicted")
+#       plt.ylabel("Actual")
+#       plt.title("Confusion Matrix")
+#       plt.show()
 
 # Calculates performance of multivariate classification model
 def calculate_performance_multiclass(y_true, y_pred):

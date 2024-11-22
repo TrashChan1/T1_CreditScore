@@ -25,8 +25,12 @@ parent_dir = os.path.dirname(current_dir)
 file_path = os.path.join(parent_dir, "data")
 
 # TODO: Upload data based on user input
-file_path = os.path.join(file_path, "credit_score_data.csv")
 
-# Load Credit Score data
-df = pd.read_csv(file_path) 
+file_path = os.path.join(file_path, "credit_scored_data.csv")
+try:
+    df = pd.read_csv(file_path) 
+except:
+    print("that file didn't work!")
+
+ # Load Credit Score data
 

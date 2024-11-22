@@ -95,8 +95,6 @@ df = pd.read_csv(file_path)
 # ## Data Visualizations and Cleaning
 # ### Look at the data
 
-# In[79]:
-
 
 # Visualizing the first 5 rows of data
 df.head()

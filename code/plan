@@ -2,7 +2,8 @@ Function Upload
 
 Function Clean
    Func Clean_Catch: Deny incorrect format file
-   Func 
+   Func Clean_Data:  Remove corrupt data, normalize data, backfill data.
+   Func Prep_Model: 
 
 Function Train
 
