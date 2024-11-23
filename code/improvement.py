@@ -520,3 +520,220 @@ encoded_target_df = pd.DataFrame(encoded_target.toarray(), columns=encoder.get_f
 df = pd.concat([df, encoded_target_df], axis=1)
 print(df.info())
 
+
+# ## Modeling
+
+# In[138]:
+
+
+# Constructing dataframe for modeling
+features_for_model = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
+                      , 'Interest_Rate', 'Credit_Utilization_Ratio', 'Credit_Mix_Bad'
+                      , 'Credit_Mix_Good', 'Credit_Mix_Standard', 'Occupation_Accountant', 'Occupation_Architect'
+                      , 'Occupation_Developer', 'Occupation_Doctor', 'Occupation_Engineer', 'Occupation_Entrepreneur'
+                      , 'Occupation_Journalist', 'Occupation_Lawyer', 'Occupation_Manager', 'Occupation_Mechanic'
+                      ,'Occupation_Media_Manager' , 'Occupation_Musician', 'Occupation_Scientist', 'Occupation_Teacher'
+                      , 'Occupation_Writer'
+                      ] 
+
+target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
+
+# Getting the size of input size
+print(len(features_for_model))
+
+
+# In[139]:
+
+
+# Defining data sets
+X = encoded_features.toarray()
+y = encoded_target.toarray()
+# y = to_categorical(df[target_features])
+print(y)
+
+
+# ### Train / test split
+
+# In[140]:
+
+
+# Basic train-test split
+# 80% training and 20% test 
+X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.20, random_state=42)
+
+# Checking the dimensions of the variables
+print(X_train.shape)
+print(y_train.shape)
+print(X_test.shape)
+print(y_test.shape)
+
+
+# In[141]:
+
+
+# Printing X_train and y_train
+print(X_train)
+print(y_train)
+
+
+# ### Neural Network
+
+# In[142]:
+
+
+# Set up the layers
+###################
+# The basic building block of a neural network is the layer. Layers extract representations from the data fed into them. Hopefully, these representations are meaningful for the problem at hand.
+# Most of deep learning consists of chaining together simple layers. Most layers, such as tf.keras.layers.Dense, have parameters that are learned during training.
+
+# Create network topology
+model = keras.Sequential()
+
+# Adding input model --> 24 input layers
+model.add(Dense(26, input_dim = X_train.shape[1], activation = 'relu'))
+print(X_train.shape[1])
+# Adding hidden layer 
+model.add(keras.layers.Dense(52, activation="relu"))
+model.add(keras.layers.Dense(96, activation="relu"))
+model.add(keras.layers.Dense(96, activation="relu"))
+model.add(keras.layers.Dense(52, activation="relu"))
+
+# output layer
+# For classification tasks, we generally tend to add an activation function in the output ("sigmoid" for binary, and "softmax" for multi-class, etc.).
+model.add(keras.layers.Dense(3, activation="softmax"))
+
+print(model.summary())
+
+
+# In[143]:
+
+
+# Compile the Model
+###################
+# Before the model is ready for training, it needs a few more settings. These are added during the model's compile step:
+# Loss function —This measures how accurate the model is during training. You want to minimize this function to "steer" the model in the right direction.
+# Optimizer —This is how the model is updated based on the data it sees and its loss function.
+# Metrics —Used to monitor the training and testing steps. The following example uses accuracy, the fraction of the images that are correctly classified.
+
+# compile the model
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.CategoricalCrossentropy(),
+              metrics=['accuracy'])
+
+
+# In[144]:
+
+
+# Train the Model
+#################
+# Training the neural network model requires the following steps:
+# Feed the training data to the model. In this example, the training data is in the train_images and train_labels arrays.
+# The model learns to associate images and labels.
+# You ask the model to make predictions about a test set—in this example, the test_images array.
+# Verify that the predictions match the labels from the test_labels array.
+# Feed the model
+# To start training, call the model.fit method—so called because it "fits" the model to the training data:
+
+model.fit(X_train, y_train, epochs = 12, batch_size = 20)
+
+
+# In[145]:
+
+
+#Evaluate accuracy
+test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
+print('\nTest accuracy:', test_acc)
+print('\nLoss:', test_loss)
+
+
+# ## Make Predictions
+
+# In[146]:
+
+
+# Make Predictions
+predictions = model.predict(X_test)
+
+# Here, the model has predicted the label for each image in the testing set. Let's take a look at some predictions
+print(predictions[0])
+print(predictions[10])
+print(predictions[100])
+print(predictions[1000])
+print(predictions[10000])
+
+
+# In[147]:
+
+
+# 3 different credit scores. You can see the comparison between the trained and tested values
+
+# getting y_test values
+y_tested = encoder.inverse_transform(y_test)
+
+
+# getting the value of the predictions
+y_predicted = encoder.inverse_transform(predictions)
+
+# printing the first 15 values of the test and predicted values 
+data = []
+for i in range(15):
+    data.append([y_tested[i], y_predicted[i]])
+
+headers = ["True Value", "Predicted Value"]
+
+print(tabulate(data, headers=headers, tablefmt="grid"))
+
+
+# In[ ]:
+
+
+# Confusion Matrix
+##################
+
+# A confusion matrix for 3 variables is a table that visually represents how well a classification model performs when 
+# predicting three different categories, where each row represents the actual class and each column represents the predicted class,
+# resulting in a 3x3 grid that shows how many instances were correctly classified and how many were misclassified between each 
+# of the three possible categories; essentially, it provides a detailed breakdown of the model's errors for each class in 
+# a multi-class classification problem.
+
+# Key points about a 3-variable confusion matrix:
+################################################
+# Structure:
+# The matrix has 3 rows and 3 columns, where each row represents one of the actual classes and each column represents one of the predicted classes. 
+ 
+# Diagonal elements:
+# The diagonal cells of the matrix represent the correctly classified instances for each class. 
+ 
+# Off-diagonal elements:
+# The values in off-diagonal cells represent the misclassified instances, showing which class the model tends to confuse with another. 
+
+# Class labels
+class_labels=['Good', 'Poor', 'Standard']
+
+# plot_prediction_vs_test_categorical(y_tested, y_predicted, class_labels)
+
+
+# In[149]:
+
+
+# Explanation of Metrics
+########################
+
+# Accuracy: The proportion of correctly classified samples.
+# Precision: The ability of the classifier not to label a negative sample as positive.
+# Recall: The ability of the classifier to find all the positive samples.
+# F1-score: A weighted average of precision and recall.
+# Confusion Matrix: A table showing the number of true positives, true negatives, false positives, and false negatives for each class. 
+ 
+# Important Considerations:
+# Averaging:
+# The average parameter in precision_score, recall_score, and f1_score can be set to different values:
+# 'macro': Calculates the metric for each label, and finds their unweighted mean.
+# 'micro': Calculates the metric globally by counting the total true positives, false negatives, and false positives.
+# 'weighted': Calculates the metric for each label, and finds their average weighted by support (the number of true instances for each label).
+# Class Imbalances:
+# If your dataset has class imbalances, consider using metrics like f1_score and recall that are less sensitive to this issue.
+
+# Calculating perofrmace of model
+calculate_performance_multiclass(y_tested, y_predicted)
+
