@@ -24,7 +24,7 @@ df.drop(columns=columns_to_drop_unrelated, inplace=True)
 # Dropping columns not in used in this model
 ##############################
 columns_to_drop_not_used= ['Num_Bank_Accounts', 'Num_of_Loan', 'Type_of_Loan', 'Delay_from_due_date', 'Num_of_Delayed_Payment'
-                           , 'Changed_Credit_Limit', 'Outstanding_Debt', 'Payment_of_Min_Amount', 'Num_Credit_Inquiries'
+                           , 'Changed_Credit_Limit', 'Payment_of_Min_Amount', 'Num_Credit_Inquiries'
                            , 'Payment_of_Min_Amount', 'Total_EMI_per_month', 'Amount_invested_monthly', 'Credit_History_Age'
                            ,'Monthly_Balance', 'Payment_Behaviour']
 
@@ -43,10 +43,17 @@ df.info()
 # 2. handle missing values
 # 3. Plot numerical columns to make sure distributions are correct
 
+# #### Outstanding_Debt
+
+# Outstanding Debt is all float values, except when it has erroneous underscores at the end.
+# It has no null columns. So with this one command we have nothing but proper float values. 
+df['Outstanding_Debt'] = df['Outstanding_Debt'].str.replace('_', '')
+
+# The distribution scews left, but there are no crazy outliers
+df['Outstanding_Debt'] = df['Outstanding_Debt'].astype(float)
+
+
 # #### Age
-
-# In[88]:
-
 
 # Extracting non-numeric textual data
 df['Age'][~df['Age'].str.isnumeric()].unique() 
@@ -58,6 +65,7 @@ df['Age'][~df['Age'].str.isnumeric()].unique()
 # Looking at the above values, looks like many underscores are present in our dataset. 
 # For age, they are not needed and can be replaced with blanks. 
 # Some negative values are also present which we will handle later on.
+
 df['Age'] = df['Age'].str.replace('_', '')
 
 # get details on column
@@ -169,6 +177,7 @@ df['Annual_Income'] = df['Annual_Income'].astype(float)
 
 # From the data cleaning we know that the Annual Income  max value is 180,000, so we will set all values bigger than 180000 to NA
 df.loc[df['Annual_Income'] > 180000, 'Annual_Income'] = pd.NA
+# df['Annual_Income'][df['Monthly_Inhand_Salary'].notnull()] = df[df['Monthly_Inhand_Salary'].notnull()].groupby(['Customer_ID', 'Monthly_Inhand_Salary'], group_keys = False)['Annual_Income'].transform(return_mode)
 
 # get details on column
 df['Annual_Income'].describe()
