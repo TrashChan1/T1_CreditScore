@@ -25,8 +25,7 @@ df.drop(columns=columns_to_drop_unrelated, inplace=True)
 ##############################
 columns_to_drop_not_used= ['Num_Bank_Accounts', 'Num_of_Loan', 'Type_of_Loan', 'Delay_from_due_date', 'Num_of_Delayed_Payment'
                            , 'Changed_Credit_Limit', 'Payment_of_Min_Amount', 'Num_Credit_Inquiries'
-                           , 'Payment_of_Min_Amount', 'Total_EMI_per_month', 'Amount_invested_monthly', 'Credit_History_Age'
-                           ,'Monthly_Balance', 'Payment_Behaviour']
+                           , 'Payment_of_Min_Amount', 'Total_EMI_per_month', 'Amount_invested_monthly', 'Monthly_Balance', 'Payment_Behaviour']
 
 # Drop columns
 df.drop(columns=columns_to_drop_not_used, inplace=True)
@@ -42,6 +41,20 @@ df.info()
 # 1. Cast the column to the correct data type
 # 2. handle missing values
 # 3. Plot numerical columns to make sure distributions are correct
+
+
+# #### Credit_History_Age
+
+# I don't think that the months of the age matters, so we can just extract the number at the beginning of the string
+df['Credit_History_Age'] = df['Credit_History_Age'].str.replace(r' Years and \d\d? Months', '', regex=True)
+
+
+
+# This still leaves us with 7245 null values. Let's try backfill.
+df['Credit_History_Age'] =  df.groupby('Customer_ID')['Credit_History_Age'].fillna(method='ffill').fillna(method='bfill').astype(int)
+
+# Backfill worked, we have no null values. Also, the distribution is very normal. The column should now be nice and clean.
+
 
 # #### Outstanding_Debt
 
@@ -353,7 +366,7 @@ df.info()
 # We have selected some features below, you can add more.
 #HINT: look at the dtypes above
 l_target = ['Credit_Score']
-l_cols_numerical = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio'] 
+l_cols_numerical = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio', 'Credit_History_Age'] 
 l_cols_categorical = ['Occupation', 'Credit_Mix']
 
 
