@@ -4,6 +4,8 @@
 # ### Check for missing variables
 
 # This will count the number of missing values per column, we will handle tis at each column
+
+
 df.isna().sum()
 
 
