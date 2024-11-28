@@ -82,9 +82,9 @@ df.drop(columns=columns_to_drop_unrelated, inplace=True)
 
 # Dropping columns not in used in this model
 ##############################
-columns_to_drop_not_used= ['Num_Bank_Accounts', 'Type_of_Loan', 'Delay_from_due_date', 'Num_of_Delayed_Payment'
-                           , 'Changed_Credit_Limit', 'Payment_of_Min_Amount', 'Num_Credit_Inquiries'
-                           , 'Payment_of_Min_Amount', 'Total_EMI_per_month', 'Amount_invested_monthly', 'Monthly_Balance', 'Payment_Behaviour']
+columns_to_drop_not_used= ['Type_of_Loan', 'Num_Credit_Inquiries'
+                           , 'Amount_invested_monthly'
+                           , 'Payment_Behaviour']
 
 # Drop columns
 df.drop(columns=columns_to_drop_not_used, inplace=True)
@@ -99,9 +99,62 @@ df.info()
 # 
 # 1. Cast the column to the correct data type
 # 2. handle missing values
-# 3. Plot numerical columns to make sure distributions are correct
+# 3. handle incorrect values
+
+
+# #### Monthly_Balance
+
+df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('__-333333333333333333333333333__', '')
+df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('_', '')
+df['Monthly_Balance'][(df['Monthly_Balance'] == '')] = None
+df['Monthly_Balance'] = df['Monthly_Balance'].astype(float)
+# df['Monthly_Balance'][(df['Monthly_Balance'] > 1000) | (df['Monthly_Balance'] <= 0)] = np.nan 
+df['Monthly_Balance'] =  df.groupby('Customer_ID')['Monthly_Balance'].fillna(method='ffill').fillna(method='bfill').astype(float)
+
+
+# #### Changed_Credit_Limit
+
+df['Changed_Credit_Limit'] = df['Changed_Credit_Limit'].str.replace('_', '')
+df['Changed_Credit_Limit'][(df['Changed_Credit_Limit'] == '')] = None
+
+df['Changed_Credit_Limit'] = df['Changed_Credit_Limit'].astype(float)
+
+# df['Changed_Credit_Limit'][(df['Changed_Credit_Limit'] > 16) | (df['Changed_Credit_Limit'] <= 0)] = np.nan 
+
+df['Changed_Credit_Limit'] =  df.groupby('Customer_ID')['Changed_Credit_Limit'].fillna(method='ffill').fillna(method='bfill').astype(float)
+
+# #### Total_EMI_per_month
+
+df['Total_EMI_per_month'] = df['Total_EMI_per_month'].astype(float)
+
+df['Total_EMI_per_month'][(df['Total_EMI_per_month'] > 600) | (df['Total_EMI_per_month'] <= 0)] = np.nan 
+
+df['Total_EMI_per_month'] =  df.groupby('Customer_ID')['Total_EMI_per_month'].fillna(method='ffill').fillna(method='bfill').astype(float)
+
+
+# #### Delay_from_due_date
+
+df['Delay_from_due_date'] = df['Delay_from_due_date'].astype(int)
+
+# df['Delay_from_due_date'][(df['Delay_from_due_date'] > 40) | (df['Delay_from_due_date'] <= 0)] = np.nan 
+
+df['Delay_from_due_date'] =  df.groupby('Customer_ID')['Delay_from_due_date'].fillna(method='ffill').fillna(method='bfill').astype(int)
+
+
+# #### Num_Bank_Accounts
+
+df['Num_Bank_Accounts'] = df['Num_Bank_Accounts'].astype(int)
+
+df['Num_Bank_Accounts'][(df['Num_Bank_Accounts'] > 70) | (df['Num_Bank_Accounts'] <= 0)] = np.nan 
+
+df['Num_Bank_Accounts'] =  df.groupby('Customer_ID')['Num_Bank_Accounts'].fillna(method='ffill').fillna(method='bfill').astype(int)
+
+
+# #### Payment_of_Min_Amount
+df['Payment_of_Min_Amount'] = df['Payment_of_Min_Amount'].astype("string")
 
 # #### Num_of_Loan
+
 df['Num_of_Loan'] = df['Num_of_Loan'].str.replace('_', '')
 df['Num_of_Loan'] = df['Num_of_Loan'].astype(int)
 df['Num_of_Loan'][(df['Num_of_Loan'] > 100) | (df['Num_of_Loan'] <= 0)] = np.nan 
@@ -112,12 +165,24 @@ df['Num_of_Loan'] =  df.groupby('Customer_ID')['Num_of_Loan'].fillna(method='ffi
 # I don't think that the months of the age matters, so we can just extract the number at the beginning of the string
 df['Credit_History_Age'] = df['Credit_History_Age'].str.replace(r' Years and \d\d? Months', '', regex=True)
 
-
-
 # This still leaves us with 7245 null values. Let's try backfill.
 df['Credit_History_Age'] =  df.groupby('Customer_ID')['Credit_History_Age'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
 # Backfill worked, we have no null values. Also, the distribution is very normal. The column should now be nice and clean.
+
+# ### 'Num_of_Delayed_Payment'
+df['Num_of_Delayed_Payment'] = df['Num_of_Delayed_Payment'].str.replace('_', '')
+
+df['Num_of_Delayed_Payment'] =  df.groupby('Customer_ID')['Num_of_Delayed_Payment'].fillna(method='ffill').fillna(method='bfill').astype(int)
+
+# Cutting off at 18 is the lowest such that 
+# there does not exist a CustomerID where all months are null, therefore
+# 18 is the lowest cut-off that allows back-fill and fore-fill from other months
+df['Num_of_Delayed_Payment'][(df['Num_of_Delayed_Payment'] > 18) | (df['Num_of_Delayed_Payment'] <= 0)] = np.nan 
+
+df['Num_of_Delayed_Payment'] =  df.groupby('Customer_ID')['Num_of_Delayed_Payment'].fillna(method='ffill').fillna(method='bfill').astype(int)
+
+df['Num_of_Delayed_Payment'] = df['Num_of_Delayed_Payment'].astype(int)
 
 
 # #### Outstanding_Debt
@@ -135,14 +200,6 @@ df['Outstanding_Debt'] = df['Outstanding_Debt'].astype(float)
 # Extracting non-numeric textual data
 df['Age'][~df['Age'].str.isnumeric()].unique() 
 
-
-# In[89]:
-
-
-# Looking at the above values, looks like many underscores are present in our dataset. 
-# For age, they are not needed and can be replaced with blanks. 
-# Some negative values are also present which we will handle later on.
-
 df['Age'] = df['Age'].str.replace('_', '')
 
 # get details on column
@@ -158,11 +215,6 @@ df['Age'] = df['Age'].astype(int)
 # get details on column
 df['Age'].describe()
 
-
-# In[91]:
-
-
-# As already noted in the data cleaning notebook,  there are many extreme values present in age column which are unrealistic in nature. 
 # Lets set any inappropriate value which is not at all possible like negative and high positive values above 100 to null for now.
 df['Age'][(df['Age'] > 100) | (df['Age'] <= 0)] = np.nan 
 
@@ -170,10 +222,6 @@ df['Age'][(df['Age'] > 100) | (df['Age'] <= 0)] = np.nan
 df['Age'].describe()
 
 
-# In[92]:
-
-
-# We have removed all inappropriate values and replaced them with nulls. What we have in our dataset is customer data, 
 # if some month's age data is missing then we can simply refer the other months data of same customer to replace with an appropriate value.
 df['Age'] =  df.groupby('Customer_ID')['Age'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
@@ -225,15 +273,8 @@ df['Occupation'] =  df.groupby('Customer_ID')['Occupation'].fillna(method='ffill
 df['Occupation'].describe()
 
 
-# In[98]:
-
-
 # Casting to correct data type
 df['Occupation'] = df['Occupation'].astype("string")
-
-# Check variable using plots:
-# plot_no_numerical_column(df, 'Occupation')
-
 
 # ### Annual_Income
 
@@ -429,38 +470,42 @@ df.info()
 
 # We have selected some features below, you can add more.
 #HINT: look at the dtypes above
-l_target = ['Credit_Score']
-l_cols_numerical = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio', 'Credit_History_Age'] 
-l_cols_categorical = ['Occupation', 'Credit_Mix']
-
-
-# ### Visualize variables
-
-# Look at Histograms
-df[l_cols_numerical].hist(xlabelsize =6)
-# plt.tight_layout()
-
-# Look at scattered plots
-axs = pd.plotting.scatter_matrix(df[l_cols_numerical], figsize=(10,10), marker = 'o', hist_kwds = {'bins': 10}, s = 60, alpha = 0.2)
-
-def wrap(txt, width=8):
-    '''helper function to wrap text for long labels'''
-    import textwrap
-    return '\n'.join(textwrap.wrap(txt, width))
-
-for ax in axs[:,0]: # the left boundary
-    ax.set_ylabel(wrap(ax.get_ylabel()), size = 8)
-    ax.set_xlim([None, None])
-    ax.set_ylim([None, None])
-
-for ax in axs[-1,:]: # the lower boundary
-    ax.set_xlabel(wrap(ax.get_xlabel()), size = 8)
-    ax.set_xlim([None, None])
-    ax.set_ylim([None, None])
-
-
-# Box plots for all variables 
-df[l_cols_numerical].boxplot(rot=90)
+#    l_target = ['Credit_Score']
+#    l_cols_numerical = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary'
+#                        , 'Num_Credit_Card', 'Interest_Rate'
+#                        , 'Credit_Utilization_Ratio', 'Credit_History_Age'
+#                        , 'Num_of_Delayed_Payment'
+#                        ] 
+#    l_cols_categorical = ['Occupation', 'Credit_Mix']
+# 
+# 
+#    # ### Visualize variables
+# 
+#    # Look at Histograms
+#    df[l_cols_numerical].hist(xlabelsize =6)
+#    # plt.tight_layout()
+# 
+#    # Look at scattered plots
+#    axs = pd.plotting.scatter_matrix(df[l_cols_numerical], figsize=(10,10), marker = 'o', hist_kwds = {'bins': 10}, s = 60, alpha = 0.2)
+# 
+#    def wrap(txt, width=8):
+#        '''helper function to wrap text for long labels'''
+#        import textwrap
+#        return '\n'.join(textwrap.wrap(txt, width))
+# 
+#    for ax in axs[:,0]: # the left boundary
+#        ax.set_ylabel(wrap(ax.get_ylabel()), size = 8)
+#        ax.set_xlim([None, None])
+#        ax.set_ylim([None, None])
+# 
+#    for ax in axs[-1,:]: # the lower boundary
+#        ax.set_xlabel(wrap(ax.get_xlabel()), size = 8)
+#        ax.set_xlim([None, None])
+#        ax.set_ylim([None, None])
+# 
+# 
+#    # Box plots for all variables 
+#    df[l_cols_numerical].boxplot(rot=90)
 
 # ### Feature Derivation/Engineering
 
@@ -476,13 +521,15 @@ df.info()
 
 # If you want to change the variables for your model, do that here!
 target = ['Credit_Score']
-continuous_features = ['Age', 'Annual_Income'
+continuous_features = ['Age', 'Annual_Income', 'Monthly_Balance'
                        , 'Monthly_Inhand_Salary', 'Num_Credit_Card'
                        , 'Interest_Rate', 'Credit_Utilization_Ratio'
                        , 'Credit_History_Age', 'Outstanding_Debt'
-                       , 'Num_of_Loan'
+                       , 'Num_of_Loan', 'Num_of_Delayed_Payment'
+                       , 'Num_Bank_Accounts', 'Delay_from_due_date'
+                       , 'Total_EMI_per_month', 'Changed_Credit_Limit'
                        ] 
-categorical_features = ['Occupation', 'Credit_Mix']
+categorical_features = ['Occupation', 'Credit_Mix', 'Payment_of_Min_Amount']
 
 
 # Encode variables to use in Neural Network
@@ -551,25 +598,28 @@ print(df.info())
 
 # ## Modeling
 
-# In[138]:
-
-
 # Constructing dataframe for modeling
-features_for_model = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary'
+features_for_model = ['Age', 'Annual_Income', 'Monthly_Balance'
+                      , 'Monthly_Inhand_Salary'
                       , 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
                       , 'Interest_Rate', 'Credit_Utilization_Ratio'
-                      , 'Num_of_Loan'
+                      , 'Num_of_Loan', 'Num_of_Delayed_Payment'
+                      , 'Num_Bank_Accounts', 'Delay_from_due_date'
+                      , 'Total_EMI_per_month', 'Changed_Credit_Limit'
 
                       , 'Credit_Mix_Bad', 'Credit_Mix_Good', 'Credit_Mix_Standard'
 
-                      , 'Occupation_Accountant', 'Occupation_Architect'
-                      , 'Occupation_Developer', 'Occupation_Doctor'
-                      , 'Occupation_Engineer', 'Occupation_Entrepreneur'
-                      , 'Occupation_Journalist', 'Occupation_Lawyer'
-                      , 'Occupation_Manager', 'Occupation_Mechanic'
-                      ,'Occupation_Media_Manager', 'Occupation_Musician'
-                      , 'Occupation_Scientist', 'Occupation_Teacher'
-                      , 'Occupation_Writer'
+                      , 'Payment_of_Min_Amount_NM', 'Payment_of_Min_Amount_No'
+                      , 'Payment_of_Min_Amount_Yes'
+
+                       , 'Occupation_Accountant', 'Occupation_Architect'
+                       , 'Occupation_Developer', 'Occupation_Doctor'
+                       , 'Occupation_Engineer', 'Occupation_Entrepreneur'
+                       , 'Occupation_Journalist', 'Occupation_Lawyer'
+                       , 'Occupation_Manager', 'Occupation_Mechanic'
+                       ,'Occupation_Media_Manager', 'Occupation_Musician'
+                       , 'Occupation_Scientist', 'Occupation_Teacher'
+                       , 'Occupation_Writer'
                       ] 
 
 target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
@@ -578,14 +628,9 @@ target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Stand
 print(len(features_for_model))
 
 
-# In[139]:
-
-
 # Defining data sets
 X = df[features_for_model].to_numpy()
-# y = encoded_target.toarray()
 y = df[target_features].to_numpy()
-# y = to_categorical(df[target_features])
 print(y)
 
 
@@ -627,23 +672,30 @@ print(y_train)
 model = keras.Sequential()
 
 # Adding input model --> 24 input layers
-model.add(Dense(27, input_dim = X_train.shape[1], activation = 'relu'))
+#model.add(keras.layers.UnitNormalization())
+model.add(Dense(256, input_dim = X_train.shape[1], activation = 'relu'))
+
+dropout = 0.2
 
 # Adding hidden layers
-model.add(keras.layers.Dense(52, activation="relu"))
-model.add(keras.layers.Dense(52, activation="relu"))
-model.add(keras.layers.Dense(52, activation="relu"))
-model.add(keras.layers.Dense(52, activation="relu"))
-model.add(keras.layers.Dense(52, activation="relu"))
+model.add(keras.layers.GaussianNoise(0.05))
+#model.add(keras.layers.ActivityRegularization())
+#model.add(keras.layers.GroupNormalization())
+#model.add(keras.layers.Dropout(dropout))
+model.add(keras.layers.Dense(256, activation="relu"))
+model.add(keras.layers.Dropout(dropout))
+model.add(keras.layers.Dense(64, activation="relu"))
+#model.add(keras.layers.Dropout(dropout))
+#model.add(keras.layers.Dense(64, activation="relu"))
+#model.add(keras.layers.Dropout(dropout))
+model.add(keras.layers.Dense(12, activation="relu"))
+#model.add(keras.layers.Dropout(dropout))
 
 # output layer
 # For classification tasks, we generally tend to add an activation function in the output ("sigmoid" for binary, and "softmax" for multi-class, etc.).
 model.add(keras.layers.Dense(3, activation="softmax"))
 
 print(model.summary())
-
-
-# In[143]:
 
 
 # Compile the Model
@@ -661,23 +713,16 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 
-# In[144]:
-
-
 # Train the Model
 #################
 # Training the neural network model requires the following steps:
 # Feed the training data to the model. In this example, the training data is in the train_images and train_labels arrays.
-# The model learns to associate images and labels.
-# You ask the model to make predictions about a test set—in this example, the test_images array.
-# Verify that the predictions match the labels from the test_labels array.
-# Feed the model
 # To start training, call the model.fit method—so called because it "fits" the model to the training data:
 
 callback = keras.callbacks.EarlyStopping(monitor='loss',
                                               patience=3)
 
-model.fit(X_train, y_train, epochs = 50, batch_size = 26, callbacks=[callback])
+model.fit(X_train, y_train, epochs = 256, batch_size = 512, callbacks=[callback])
 
 
 # In[145]:
@@ -691,9 +736,6 @@ print('\nLoss:', test_loss)
 
 # ## Make Predictions
 
-# In[146]:
-
-
 # Make Predictions
 predictions = model.predict(X_test)
 
@@ -703,9 +745,6 @@ print(predictions[10])
 print(predictions[100])
 print(predictions[1000])
 print(predictions[10000])
-
-
-# In[147]:
 
 
 # 3 different credit scores. You can see the comparison between the trained and tested values
