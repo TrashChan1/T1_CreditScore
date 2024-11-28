@@ -471,7 +471,7 @@ df.info()
 
 # If you want to change the variables for your model, do that here!
 target = ['Credit_Score']
-continuous_features = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio'] 
+continuous_features = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio', 'Credit_History_Age', 'Outstanding_Debt'] 
 categorical_features = ['Occupation', 'Credit_Mix']
 
 
@@ -499,7 +499,10 @@ encoder = OneHotEncoder(handle_unknown='ignore')
 # Encoder for target
 le = LabelEncoder()
 
+# Scaler for continuous input features
+scaler = MinMaxScaler()
 
+## CATEGORICAL INPUT FEATURES
 # Encoding categorical features
 encoded_features = encoder.fit_transform(df[categorical_features])
 
@@ -510,6 +513,8 @@ encoded_df = pd.DataFrame(encoded_features.toarray(), columns=encoder.get_featur
 df = pd.concat([df, encoded_df], axis=1)
 print(df.info())
 
+
+## TARGET FEATURES
 # Encoding categorical features
 encoded_target = encoder.fit_transform(df[target])
 
@@ -518,6 +523,19 @@ encoded_target_df = pd.DataFrame(encoded_target.toarray(), columns=encoder.get_f
 
 # joining dataframes 
 df = pd.concat([df, encoded_target_df], axis=1)
+print(df.info())
+
+
+## INPUT CONTINUOUS FEATURES
+# Scaling continuous features
+scaled_features = scaler.fit_transform(df[continuous_features])
+
+# Convert the scaled data back to a DataFrame:
+encoded_scaled_df = pd.DataFrame(scaled_features, columns=scaler.get_feature_names_out(continuous_features))
+
+# joining dataframes 
+df.drop(columns=continuous_features, inplace=True)
+df = pd.concat([df, encoded_scaled_df], axis=1)
 print(df.info())
 
 
@@ -546,8 +564,9 @@ print(len(features_for_model))
 
 
 # Defining data sets
-X = encoded_features.toarray()
-y = encoded_target.toarray()
+X = df[features_for_model].to_numpy()
+# y = encoded_target.toarray()
+y = df[target_features].to_numpy()
 # y = to_categorical(df[target_features])
 print(y)
 
