@@ -39,7 +39,7 @@ from tensorflow import keras
 # Keras
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Activation, Dropout
 
 
 # Get the current working directory
@@ -610,11 +610,12 @@ model = keras.Sequential()
 
 # Adding input model --> 24 input layers
 model.add(Dense(26, input_dim = X_train.shape[1], activation = 'relu'))
-print(X_train.shape[1])
-# Adding hidden layer 
+
+# Adding hidden layers
 model.add(keras.layers.Dense(52, activation="relu"))
-model.add(keras.layers.Dense(96, activation="relu"))
-model.add(keras.layers.Dense(96, activation="relu"))
+model.add(keras.layers.Dense(52, activation="relu"))
+model.add(keras.layers.Dense(52, activation="relu"))
+model.add(keras.layers.Dense(52, activation="relu"))
 model.add(keras.layers.Dense(52, activation="relu"))
 
 # output layer
@@ -635,6 +636,8 @@ print(model.summary())
 # Metrics —Used to monitor the training and testing steps. The following example uses accuracy, the fraction of the images that are correctly classified.
 
 # compile the model
+
+
 model.compile(optimizer='adam',
               loss=tf.keras.losses.CategoricalCrossentropy(),
               metrics=['accuracy'])
@@ -653,7 +656,10 @@ model.compile(optimizer='adam',
 # Feed the model
 # To start training, call the model.fit method—so called because it "fits" the model to the training data:
 
-model.fit(X_train, y_train, epochs = 12, batch_size = 20)
+callback = keras.callbacks.EarlyStopping(monitor='loss',
+                                              patience=3)
+
+model.fit(X_train, y_train, epochs = 15, batch_size = 26, callbacks=[callback])
 
 
 # In[145]:
