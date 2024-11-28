@@ -82,7 +82,7 @@ df.drop(columns=columns_to_drop_unrelated, inplace=True)
 
 # Dropping columns not in used in this model
 ##############################
-columns_to_drop_not_used= ['Num_Bank_Accounts', 'Num_of_Loan', 'Type_of_Loan', 'Delay_from_due_date', 'Num_of_Delayed_Payment'
+columns_to_drop_not_used= ['Num_Bank_Accounts', 'Type_of_Loan', 'Delay_from_due_date', 'Num_of_Delayed_Payment'
                            , 'Changed_Credit_Limit', 'Payment_of_Min_Amount', 'Num_Credit_Inquiries'
                            , 'Payment_of_Min_Amount', 'Total_EMI_per_month', 'Amount_invested_monthly', 'Monthly_Balance', 'Payment_Behaviour']
 
@@ -101,6 +101,11 @@ df.info()
 # 2. handle missing values
 # 3. Plot numerical columns to make sure distributions are correct
 
+# #### Num_of_Loan
+df['Num_of_Loan'] = df['Num_of_Loan'].str.replace('_', '')
+df['Num_of_Loan'] = df['Num_of_Loan'].astype(int)
+df['Num_of_Loan'][(df['Num_of_Loan'] > 100) | (df['Num_of_Loan'] <= 0)] = np.nan 
+df['Num_of_Loan'] =  df.groupby('Customer_ID')['Num_of_Loan'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
 # #### Credit_History_Age
 
@@ -471,7 +476,12 @@ df.info()
 
 # If you want to change the variables for your model, do that here!
 target = ['Credit_Score']
-continuous_features = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Interest_Rate', 'Credit_Utilization_Ratio', 'Credit_History_Age', 'Outstanding_Debt'] 
+continuous_features = ['Age', 'Annual_Income'
+                       , 'Monthly_Inhand_Salary', 'Num_Credit_Card'
+                       , 'Interest_Rate', 'Credit_Utilization_Ratio'
+                       , 'Credit_History_Age', 'Outstanding_Debt'
+                       , 'Num_of_Loan'
+                       ] 
 categorical_features = ['Occupation', 'Credit_Mix']
 
 
@@ -545,12 +555,20 @@ print(df.info())
 
 
 # Constructing dataframe for modeling
-features_for_model = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary', 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
-                      , 'Interest_Rate', 'Credit_Utilization_Ratio', 'Credit_Mix_Bad'
-                      , 'Credit_Mix_Good', 'Credit_Mix_Standard', 'Occupation_Accountant', 'Occupation_Architect'
-                      , 'Occupation_Developer', 'Occupation_Doctor', 'Occupation_Engineer', 'Occupation_Entrepreneur'
-                      , 'Occupation_Journalist', 'Occupation_Lawyer', 'Occupation_Manager', 'Occupation_Mechanic'
-                      ,'Occupation_Media_Manager' , 'Occupation_Musician', 'Occupation_Scientist', 'Occupation_Teacher'
+features_for_model = ['Age', 'Annual_Income', 'Monthly_Inhand_Salary'
+                      , 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
+                      , 'Interest_Rate', 'Credit_Utilization_Ratio'
+                      , 'Num_of_Loan'
+
+                      , 'Credit_Mix_Bad', 'Credit_Mix_Good', 'Credit_Mix_Standard'
+
+                      , 'Occupation_Accountant', 'Occupation_Architect'
+                      , 'Occupation_Developer', 'Occupation_Doctor'
+                      , 'Occupation_Engineer', 'Occupation_Entrepreneur'
+                      , 'Occupation_Journalist', 'Occupation_Lawyer'
+                      , 'Occupation_Manager', 'Occupation_Mechanic'
+                      ,'Occupation_Media_Manager', 'Occupation_Musician'
+                      , 'Occupation_Scientist', 'Occupation_Teacher'
                       , 'Occupation_Writer'
                       ] 
 
@@ -609,7 +627,7 @@ print(y_train)
 model = keras.Sequential()
 
 # Adding input model --> 24 input layers
-model.add(Dense(26, input_dim = X_train.shape[1], activation = 'relu'))
+model.add(Dense(27, input_dim = X_train.shape[1], activation = 'relu'))
 
 # Adding hidden layers
 model.add(keras.layers.Dense(52, activation="relu"))
@@ -659,7 +677,7 @@ model.compile(optimizer='adam',
 callback = keras.callbacks.EarlyStopping(monitor='loss',
                                               patience=3)
 
-model.fit(X_train, y_train, epochs = 15, batch_size = 26, callbacks=[callback])
+model.fit(X_train, y_train, epochs = 50, batch_size = 26, callbacks=[callback])
 
 
 # In[145]:
