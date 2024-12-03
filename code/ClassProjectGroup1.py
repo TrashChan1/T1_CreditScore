@@ -172,7 +172,7 @@ def handle_load_data():
                 print("Invalid choice. Please try again.")
 
 
-def clean_data(df: pandas.core.frame.DataFrame):
+def clean_data(df: pd.core.frame.DataFrame):
 
     df.isna().sum()
 
@@ -317,9 +317,6 @@ def clean_data(df: pandas.core.frame.DataFrame):
 
     df['ID'] = df['ID'].astype('string')
 
-    # Getting information on the data frame
-    df.info()
-
     # If you want to change the variables for your model, do that here!
     target = ['Credit_Score']
     continuous_features = ['Age', 'Annual_Income', 'Monthly_Balance'
@@ -332,12 +329,8 @@ def clean_data(df: pandas.core.frame.DataFrame):
                            ] 
     categorical_features = ['Occupation', 'Credit_Mix', 'Payment_of_Min_Amount']
 
-
     # Encoder for input features
     encoder = OneHotEncoder(handle_unknown='ignore')
-
-    # Encoder for target
-    #le = LabelEncoder()
 
     # Scaler for continuous input features
     scaler = MinMaxScaler()
@@ -351,8 +344,6 @@ def clean_data(df: pandas.core.frame.DataFrame):
 
     # joining dataframes 
     df = pd.concat([df, encoded_df], axis=1)
-    print(df.info())
-
 
     ## TARGET FEATURES
     # Encoding categorical features
@@ -363,8 +354,6 @@ def clean_data(df: pandas.core.frame.DataFrame):
 
     # joining dataframes 
     df = pd.concat([df, encoded_target_df], axis=1)
-    print(df.info())
-
 
     ## INPUT CONTINUOUS FEATURES
     # Scaling continuous features
@@ -379,7 +368,10 @@ def clean_data(df: pandas.core.frame.DataFrame):
 
     return df
 
-def construct_model():
+def construct_model(df: pd.core.frame.DataFrame):
+    dropout = 0.2
+    noise = 0.05
+
     # Constructing dataframe for modeling
     features_for_model = ['Age', 'Annual_Income', 'Monthly_Balance'
                           , 'Monthly_Inhand_Salary'
@@ -406,7 +398,118 @@ def construct_model():
 
     target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
 
+    # Defining data sets
+    X = df[features_for_model].to_numpy()
+    y = df[target_features].to_numpy()
 
+    # Basic train-test split
+    # 80% training and 20% test 
+    X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.20, random_state=42)
+
+    # ### Neural Network
+
+    # Set up the layers
+    ###################
+
+    # Create network topology
+    model = keras.Sequential()
+
+    model.add(Dense(256, input_dim = X_train.shape[1], activation = 'relu'))
+
+    # Noise Helps fit data rather than noise
+    model.add(keras.layers.GaussianNoise(noise))
+
+    model.add(keras.layers.Dense(256, activation="relu"))
+
+    # dropout helps fit data rather than noise.
+    # By applyinng ot on the layer that goes from many neurons to few neurons makes it effective without ruining the brains of the model
+    model.add(keras.layers.Dropout(dropout))
+
+    model.add(keras.layers.Dense(64, activation="relu"))
+    model.add(keras.layers.Dense(12, activation="relu"))
+
+    # output layer
+    # For classification tasks, we generally tend to add an activation function in the output ("sigmoid" for binary, and "softmax" for multi-class, etc.).
+    model.add(keras.layers.Dense(3, activation="softmax"))
+
+    print(model.summary())
+
+
+    # Compile the Model
+    ###################
+    # Before the model is ready for training, it needs a few more settings. These are added during the model's compile step:
+    # Loss function —This measures how accurate the model is during training. You want to minimize this function to "steer" the model in the right direction.
+    # Optimizer —This is how the model is updated based on the data it sees and its loss function.
+    # Metrics —Used to monitor the training and testing steps. The following example uses accuracy, the fraction of the images that are correctly classified.
+
+    # compile the model
+
+
+    model.compile(optimizer='adam',
+                  loss=tf.keras.losses.CategoricalCrossentropy(),
+                  metrics=['accuracy'])
+
+
+    # Train the Model
+    #################
+    # Training the neural network model requires the following steps:
+    # Feed the training data to the model. In this example, the training data is in the train_images and train_labels arrays.
+    # To start training, call the model.fit method—so called because it "fits" the model to the training data:
+
+    # callback stops the epochs early when reaching plateu
+    callback = keras.callbacks.EarlyStopping(monitor='loss',
+                                                  patience=3)
+
+    model.fit(X_train, y_train, epochs = 256, batch_size = 512, callbacks=[callback])
+
+    return model, X_test, y_test
+
+def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.ndarray, df: pd.core.frame.DataFrame):
+
+    encoder = OneHotEncoder(handle_unknown='ignore')
+    #encoder.fit_transform(df[categorical_features])
+
+    #Evaluate accuracy
+    test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
+    print('\nTest accuracy:', test_acc)
+    print('\nLoss:', test_loss)
+
+
+    # ## Make Predictions
+
+    # Make Predictions
+
+    # Here's the predictions. I guess these need exported to a csv file, but IDK what for
+    predictions = model.predict(X_test)
+
+    # Here, the model has predicted the label for each image in the testing set. Let's take a look at some predictions
+    print(predictions[0])
+    print(predictions[10])
+    print(predictions[100])
+    print(predictions[1000])
+    print(predictions[10000])
+
+
+    # 3 different credit scores. You can see the comparison between the trained and tested values
+    
+    # The following functionality is broken and needs fixed:
+'
+    # getting y_test values
+    y_tested = encoder.inverse_transform(y_test)
+
+
+    # getting the value of the predictions
+    y_predicted = encoder.inverse_transform(predictions)
+
+    # printing the first 15 values of the test and predicted values 
+    data = []
+    for i in range(15):
+        data.append([y_tested[i], y_predicted[i]])
+
+    headers = ["True Value", "Predicted Value"]
+
+    print(tabulate(data, headers=headers, tablefmt="grid"))
+'
 
 
 
@@ -424,19 +527,25 @@ def main_menu():
         
         if choice == '1':
             df = handle_load_data()
+            df.info()
+            #if(df.empty()):
+                #continue
 
         elif choice == '2':
             print("\nProcessing input data set")
             print("*************************")
             df = clean_data(df)
+            df.info()
 
         elif choice == '3':
-            print("\nPrinting model details")
+            print("\n Compiling the model")
             print("**********************")
+            model, X_test, y_test = construct_model(df)
 
         elif choice == '4':
             print("\nTesting model")
             print("*************")
+            test_model(model, X_test, y_test, df)
 
         elif choice == '5':
             print("\nQuiting program, goodbye!")
