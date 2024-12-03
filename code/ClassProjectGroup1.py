@@ -425,7 +425,9 @@ def construct_model(df: pd.core.frame.DataFrame):
     # By applyinng ot on the layer that goes from many neurons to few neurons makes it effective without ruining the brains of the model
     model.add(keras.layers.Dropout(dropout))
 
-    model.add(keras.layers.Dense(64, activation="relu"))
+    model.add(keras.layers.Dense(128, activation="relu"))
+    model.add(keras.layers.Dropout(dropout))
+    model.add(keras.layers.Dense(128, activation="relu"))
     model.add(keras.layers.Dense(12, activation="relu"))
 
     # output layer
@@ -433,7 +435,6 @@ def construct_model(df: pd.core.frame.DataFrame):
     model.add(keras.layers.Dense(3, activation="softmax"))
 
     print(model.summary())
-
 
     # Compile the Model
     ###################
@@ -493,23 +494,23 @@ def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.nd
     # 3 different credit scores. You can see the comparison between the trained and tested values
     
     # The following functionality is broken and needs fixed:
-'
-    # getting y_test values
-    y_tested = encoder.inverse_transform(y_test)
 
-
-    # getting the value of the predictions
-    y_predicted = encoder.inverse_transform(predictions)
-
-    # printing the first 15 values of the test and predicted values 
-    data = []
-    for i in range(15):
-        data.append([y_tested[i], y_predicted[i]])
-
-    headers = ["True Value", "Predicted Value"]
-
-    print(tabulate(data, headers=headers, tablefmt="grid"))
-'
+#    # getting y_test values
+#   y_tested = encoder.inverse_transform(y_test)
+#
+#
+#   # getting the value of the predictions
+#   y_predicted = encoder.inverse_transform(predictions)
+#
+#   # printing the first 15 values of the test and predicted values 
+#   data = []
+#   for i in range(15):
+#       data.append([y_tested[i], y_predicted[i]])
+#
+#   headers = ["True Value", "Predicted Value"]
+#
+#   print(tabulate(data, headers=headers, tablefmt="grid"))
+#
 
 
 

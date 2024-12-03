@@ -679,17 +679,12 @@ dropout = 0.2
 
 # Adding hidden layers
 model.add(keras.layers.GaussianNoise(0.05))
-#model.add(keras.layers.ActivityRegularization())
-#model.add(keras.layers.GroupNormalization())
-#model.add(keras.layers.Dropout(dropout))
 model.add(keras.layers.Dense(256, activation="relu"))
 model.add(keras.layers.Dropout(dropout))
-model.add(keras.layers.Dense(64, activation="relu"))
-#model.add(keras.layers.Dropout(dropout))
-#model.add(keras.layers.Dense(64, activation="relu"))
-#model.add(keras.layers.Dropout(dropout))
+model.add(keras.layers.Dense(128, activation="relu"))
+model.add(keras.layers.Dropout(dropout))
+model.add(keras.layers.Dense(128, activation="relu"))
 model.add(keras.layers.Dense(12, activation="relu"))
-#model.add(keras.layers.Dropout(dropout))
 
 # output layer
 # For classification tasks, we generally tend to add an activation function in the output ("sigmoid" for binary, and "softmax" for multi-class, etc.).
