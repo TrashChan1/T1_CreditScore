@@ -1,23 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
-
-# ## Basic Neural Network Starter Notebook
-
-# MNIST is a dataset that is comprised of 60,000 handwritten  numbers and is a standard benchmark for  classification tasks.
-# 
-
-# In[76]:
-
-
-# Install libraries if needed
-# get_ipython().system('pip install tabulate')
-
-
-# ### Import Dependencies
-
-# In[77]:
-
-
 # General Packages
 import math
 import os

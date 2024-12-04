@@ -145,8 +145,14 @@ def handle_load_data():
     Returns:
         pd.DataFrame or None: The loaded DataFrame if successful, None if user chooses to return to menu
     """
-    df, load_time = load_data()
     
+    new_file = input("Enter the name of the file to load: ")
+    try:
+        df, load_time = load_data(file_name=new_file)
+    except:
+        print("\nFailed to load file.")
+
+
     while True:
         if df is not None:
             return df
@@ -156,20 +162,28 @@ def handle_load_data():
         print("(2) Try loading a different file")
         print("(3) Return to main menu")
         
-        while True:
-            choice = input("Enter your choice (1-3): ")
-            
-            if choice == '1':
-                df, load_time = load_data()
+        choice = input("Enter your choice (1-3): ")
+        
+        if choice == '1':
+            try:
+                df, load_time = load_data(new_file)
+            except:
+                print("\nFailed to load file.")
                 break
-            elif choice == '2':
+        elif choice == '2':
+            try:
                 new_file = input("Enter the name of the file to load: ")
-                df, load_time = load_data(file_name=new_file)
+                df, load_time = load_data(new_file)
+            except:
+                print("\nFailed to load file.")
                 break
-            elif choice == '3':
-                return None
-            else:
-                print("Invalid choice. Please try again.")
+        elif choice == '3':
+            return None
+        else:
+            print("Invalid choice. Please try again.")
+
+        df, load_time = load_data()
+
 
 
 def clean_data(df: pd.core.frame.DataFrame):
@@ -205,9 +219,13 @@ def clean_data(df: pd.core.frame.DataFrame):
 
     # #### Monthly_Balance
 
-    df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('__-333333333333333333333333333__', '')
-    df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('_', '')
-    df['Monthly_Balance'][(df['Monthly_Balance'] == '')] = None
+    #s = df['Monthly_Balance'].to_series()
+    balance_frame = pd.to_numeric(df.Monthly_Balance, errors='coerce').dropna().to_frame()
+    df.drop(columns='Monthly_Balance', inplace=True)
+    df = pd.concat([df, balance_frame], axis=1)
+   # df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('__-333333333333333333333333333__', '')
+   # df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('_', '')
+   # df['Monthly_Balance'][(df['Monthly_Balance'] == '')] = None
     df['Monthly_Balance'] = df['Monthly_Balance'].astype(float)
     df['Monthly_Balance'] =  df.groupby('Customer_ID')['Monthly_Balance'].fillna(method='ffill').fillna(method='bfill').astype(float)
 
@@ -483,6 +501,9 @@ def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.nd
     # Here's the predictions. I guess these need exported to a csv file, but IDK what for
     predictions = model.predict(X_test)
 
+    # Create comma separated value file
+    # push predictions -> file
+
     # Here, the model has predicted the label for each image in the testing set. Let's take a look at some predictions
     print(predictions[0])
     print(predictions[10])
@@ -525,12 +546,13 @@ def main_menu():
         print("(5) Quit")
         
         choice = input("Enter your choice (1-5): ")
-        
+
         if choice == '1':
-            df = handle_load_data()
-            df.info()
-            #if(df.empty()):
-                #continue
+            try: 
+                df = handle_load_data()
+                df.info()
+            except:
+                print("file not loaded.\n")
 
         elif choice == '2':
             print("\nProcessing input data set")
