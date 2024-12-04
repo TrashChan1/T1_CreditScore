@@ -60,83 +60,62 @@ def load_data(file_name: str = "credit_score_data.csv", folder_name: str = "data
         pd.DataFrame or None: The loaded DataFrame if successful, None if an error occurs
         float: Time taken to load the data
     """
-    try:
-        print("\nLoading and cleaning input data set:")
-        print("************************************")
-        print(f"[{get_current_time()}] Starting Script")
-        print(f"[{get_current_time()}] Loading training data set")
-        
-        # Start timing
-        start_time = time.time()
-        
-        # Load the data
-        current_dir = Path.cwd()
-        data_folder = current_dir.parent / folder_name
-        file_path = data_folder / file_name
-        
-        # Check if file exists
-        if not file_path.exists():
-            print(f"[{get_current_time()}] Error: File not found at '{file_path}'")
-            return None, 0
-            
-        # Check file size
-        file_size = os.path.getsize(file_path) / (1024 * 1024)  # Convert to MB
-        if file_size > 1000:  # Example: 1GB limit
-            print(f"[{get_current_time()}] Error: File size ({file_size:.2f}MB) exceeds maximum allowed size")
-            return None, 0
-            
-        # Check permissions
-        if not os.access(file_path, os.R_OK):
-            print(f"[{get_current_time()}] Error: Permission denied - Cannot read file")
-            return None, 0
-            
-        # Check if file is empty
-        if file_size == 0:
-            print(f"[{get_current_time()}] Error: File is empty")
-            return None, 0
-            
-        # Detect file encoding
-        with open(file_path, 'rb') as file:
-            raw_data = file.read()
-            result = chardet.detect(raw_data)
-            encoding = result['encoding']
-        
-        # Try to load the CSV file
-        df = pd.read_csv(file_path, encoding=encoding)
-        
-        if df.empty:
-            print(f"[{get_current_time()}] Error: No data found in file")
-            return None, 0
-            
-        # Basic format validation
-        if len(df.columns) < 2:  # Assuming we expect at least 2 columns
-            print(f"[{get_current_time()}] Error: Invalid file format - Incorrect number of columns")
-            return None, 0
-        
-        # Calculate loading time
-        load_time = time.time() - start_time
-        
-        # Print the required information
-        print(f"[{get_current_time()}] Total Columns Read: {len(df.columns)}")
-        print(f"[{get_current_time()}] Total Rows Read: {len(df)}")
-        print(f"\nTime to load is: {load_time:.2f} seconds")
-        
-        return df, load_time
-        
-    except PermissionError:
-        print(f"[{get_current_time()}] Error: Permission denied - Cannot access file")
-    except pd.errors.EmptyDataError:
-        print(f"[{get_current_time()}] Error: The file is empty")
-    except pd.errors.ParserError:
-        print(f"[{get_current_time()}] Error: The file is corrupted or has an invalid format")
-    except UnicodeDecodeError:
-        print(f"[{get_current_time()}] Error: File encoding not supported")
-    except MemoryError:
-        print(f"[{get_current_time()}] Error: File too large to process")
-    except Exception as e:
-        print(f"[{get_current_time()}] Error: Unable to load the file - {str(e)}")
+    print("\nLoading and cleaning input data set:")
+    print("************************************")
+    print(f"[{get_current_time()}] Starting Script")
+    print(f"[{get_current_time()}] Loading training data set")
     
-    return None, 0
+    # Start timing
+    start_time = time.time()
+    
+    # Load the data
+    current_dir = Path.cwd()
+    data_folder = current_dir.parent / folder_name
+    file_path = data_folder / file_name
+    
+    # Check if file exists
+    if not file_path.exists():
+        raise Exception(f"File not found at '{file_path}'")
+        
+    # Check file size
+    file_size = os.path.getsize(file_path) / (1024 * 1024)  # Convert to MB
+    if file_size > 1000:  # Example: 1GB limit
+        raise Exception("File size ({file_size:.2f}MB) exceeds maximum allowed size")
+        
+    # Check permissions
+    if not os.access(file_path, os.R_OK):
+        raise Exception("Permission denied - Cannot read file")
+        
+    # Check if file is empty
+    if file_size == 0:
+        raise Exception("File is empty")
+        
+    # Detect file encoding
+    with open(file_path, 'rb') as file:
+        raw_data = file.read()
+        result = chardet.detect(raw_data)
+        encoding = result['encoding']
+    
+    # Try to load the CSV file
+    df = pd.read_csv(file_path, encoding=encoding)
+
+    
+    if df.empty:
+        raise Exception("No data found in file")
+        
+    # Basic format validation
+    if len(df.columns) < 2:  # Assuming we expect at least 2 columns
+        raise Exception("Invalid file format - Incorrect number of columns")
+    
+    # Calculate loading time
+    load_time = time.time() - start_time
+    
+    # Print the required information
+    print(f"[{get_current_time()}] Total Columns Read: {len(df.columns)}")
+    print(f"[{get_current_time()}] Total Rows Read: {len(df)}")
+    print(f"\nTime to load is: {load_time:.2f} seconds")
+    
+    return df, load_time
 
 def handle_load_data():
     """
@@ -147,16 +126,21 @@ def handle_load_data():
     """
     
     new_file = input("Enter the name of the file to load: ")
-    try:
-        df, load_time = load_data(file_name=new_file)
-    except:
-        print("\nFailed to load file.")
-
 
     while True:
-        if df is not None:
-            return df
-            
+
+        # Default behavior scipped by else statement
+        try:
+            df, load_time = load_data(new_file)
+            df.info()
+            try:
+                df = clean_data(df)
+                return df
+            except Exception as e:
+                print("\nFailed to clean file: ", e)
+        except Exception as e:
+            print("\nFailed to load file: ", e)
+
         print("\nWhat would you like to do?")
         print("(1) Try loading the same file again")
         print("(2) Try loading a different file")
@@ -165,27 +149,14 @@ def handle_load_data():
         choice = input("Enter your choice (1-3): ")
         
         if choice == '1':
-            try:
-                df, load_time = load_data(new_file)
-            except:
-                print("\nFailed to load file.")
-                break
+            pass
         elif choice == '2':
-            try:
-                new_file = input("Enter the name of the file to load: ")
-                df, load_time = load_data(new_file)
-            except:
-                print("\nFailed to load file.")
-                break
+            new_file = input("Enter the name of the file to load: ")
         elif choice == '3':
-            return None
+            raise Exception("File not loaded")
         else:
             print("Invalid choice. Please try again.")
-
-        df, load_time = load_data()
-
-
-
+            continue
 def clean_data(df: pd.core.frame.DataFrame):
 
     df.isna().sum()
@@ -452,7 +423,7 @@ def construct_model(df: pd.core.frame.DataFrame):
     # For classification tasks, we generally tend to add an activation function in the output ("sigmoid" for binary, and "softmax" for multi-class, etc.).
     model.add(keras.layers.Dense(3, activation="softmax"))
 
-    print(model.summary())
+    #print(model.summary())
 
     # Compile the Model
     ###################
@@ -500,16 +471,8 @@ def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.nd
 
     # Here's the predictions. I guess these need exported to a csv file, but IDK what for
     predictions = model.predict(X_test)
-
-    # Create comma separated value file
-    # push predictions -> file
-
-    # Here, the model has predicted the label for each image in the testing set. Let's take a look at some predictions
-    print(predictions[0])
-    print(predictions[10])
-    print(predictions[100])
-    print(predictions[1000])
-    print(predictions[10000])
+    predDF = pd.DataFrame(predictions)
+    predDF.to_csv("predictions.csv")
 
 
     # 3 different credit scores. You can see the comparison between the trained and tested values
@@ -551,19 +514,19 @@ def main_menu():
             try: 
                 df = handle_load_data()
                 df.info()
-            except:
-                print("file not loaded.\n")
+            except Exception as e:
+                print("file not loaded: ", e, "\n")
 
         elif choice == '2':
-            print("\nProcessing input data set")
-            print("*************************")
-            df = clean_data(df)
-            df.info()
+            print("\nConstructing model based on input file")
+            print("***************************************")
+            try:
+                model, X_test, y_test = construct_model(df)
+            except Exception as e:
+                print("Model not constructed: ", e, "\n")
 
         elif choice == '3':
-            print("\n Compiling the model")
-            print("**********************")
-            model, X_test, y_test = construct_model(df)
+            print(model.summary())
 
         elif choice == '4':
             print("\nTesting model")
