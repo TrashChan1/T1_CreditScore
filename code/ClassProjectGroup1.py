@@ -560,8 +560,10 @@ def main_menu():
                 print("Model not constructed: ", e, "\n")
 
         elif choice == '3':
-            print(model.summary())
-
+            try:
+                print(model.summary())
+            except Exception as e:
+                print("Error: ", e, "\n")
         elif choice == '4':
             print("\nTesting model")
             print("*************")
