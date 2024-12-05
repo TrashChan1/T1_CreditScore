@@ -357,44 +357,14 @@ def clean_data(df: pd.core.frame.DataFrame):
 
     return df
 
+<<<<<<< HEAD
 def construct_model(df: pd.core.frame.DataFrame):
 
+=======
+def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: np.ndarray):
+>>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
     dropout = 0.2
     noise = 0.05
-
-    # Constructing dataframe for modeling
-    features_for_model = ['Age', 'Annual_Income', 'Monthly_Balance'
-                          , 'Monthly_Inhand_Salary'
-                          , 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
-                          , 'Interest_Rate', 'Credit_Utilization_Ratio'
-                          , 'Num_of_Loan', 'Num_of_Delayed_Payment'
-                          , 'Num_Bank_Accounts', 'Delay_from_due_date'
-                          , 'Total_EMI_per_month', 'Changed_Credit_Limit'
-
-                          , 'Credit_Mix_Bad', 'Credit_Mix_Good', 'Credit_Mix_Standard'
-
-                          , 'Payment_of_Min_Amount_NM', 'Payment_of_Min_Amount_No'
-                          , 'Payment_of_Min_Amount_Yes'
-
-                           , 'Occupation_Accountant', 'Occupation_Architect'
-                           , 'Occupation_Developer', 'Occupation_Doctor'
-                           , 'Occupation_Engineer', 'Occupation_Entrepreneur'
-                           , 'Occupation_Journalist', 'Occupation_Lawyer'
-                           , 'Occupation_Manager', 'Occupation_Mechanic'
-                           ,'Occupation_Media_Manager', 'Occupation_Musician'
-                           , 'Occupation_Scientist', 'Occupation_Teacher'
-                           , 'Occupation_Writer'
-                          ] 
-
-    target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
-
-    # Defining data sets
-    X = df[features_for_model].to_numpy()
-    y = df[target_features].to_numpy()
-
-    # Basic train-test split
-    # 80% training and 20% test 
-    X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.20, random_state=42)
 
     # ### Neural Network
 
@@ -455,7 +425,49 @@ def construct_model(df: pd.core.frame.DataFrame):
 
     return model
 
+<<<<<<< HEAD
 def test_model(model: keras.models.Sequential, df: pd.core.frame.DataFrame):
+=======
+def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20):
+    
+    # Constructing dataframe for modeling
+    features_for_model = ['Age', 'Annual_Income', 'Monthly_Balance'
+                          , 'Monthly_Inhand_Salary'
+                          , 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
+                          , 'Interest_Rate', 'Credit_Utilization_Ratio'
+                          , 'Num_of_Loan', 'Num_of_Delayed_Payment'
+                          , 'Num_Bank_Accounts', 'Delay_from_due_date'
+                          , 'Total_EMI_per_month', 'Changed_Credit_Limit'
+
+                          , 'Credit_Mix_Bad', 'Credit_Mix_Good', 'Credit_Mix_Standard'
+
+                          , 'Payment_of_Min_Amount_NM', 'Payment_of_Min_Amount_No'
+                          , 'Payment_of_Min_Amount_Yes'
+
+                           , 'Occupation_Accountant', 'Occupation_Architect'
+                           , 'Occupation_Developer', 'Occupation_Doctor'
+                           , 'Occupation_Engineer', 'Occupation_Entrepreneur'
+                           , 'Occupation_Journalist', 'Occupation_Lawyer'
+                           , 'Occupation_Manager', 'Occupation_Mechanic'
+                           ,'Occupation_Media_Manager', 'Occupation_Musician'
+                           , 'Occupation_Scientist', 'Occupation_Teacher'
+                           , 'Occupation_Writer'
+                          ] 
+
+    target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
+
+    # Defining data sets
+    X = df[features_for_model].to_numpy()
+    y = df[target_features].to_numpy()
+
+    # Basic train-test split
+    # 80% training and 20% test 
+    X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.20, random_state=42)
+    return X_train, X_test, y_train, y_test
+
+
+def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.ndarray):
+>>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
 
     encoder = OneHotEncoder(handle_unknown='ignore')
 
@@ -534,7 +546,6 @@ def test_model(model: keras.models.Sequential, df: pd.core.frame.DataFrame):
 
 
 def main_menu():
-    df = 0
     while True:
         print("\nMain Menu")
         print("(1) Load data")
@@ -549,6 +560,7 @@ def main_menu():
             try: 
                 df = handle_load_data()
                 df.info()
+                X_train, X_test, y_train, y_test = handle_train_test_split(df, 0.20)
             except Exception as e:
                 print("file not loaded: ", e, "\n")
 
@@ -556,7 +568,11 @@ def main_menu():
             print("\nConstructing model based on input file")
             print("***************************************")
             try:
+<<<<<<< HEAD
                 model = construct_model(df)
+=======
+                model = construct_model(df, X_train, y_train)
+>>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
             except Exception as e:
                 print("Model not constructed: ", e, "\n")
 
@@ -566,12 +582,19 @@ def main_menu():
         elif choice == '4':
             print("\nTesting model")
             print("*************")
+<<<<<<< HEAD
             test_model(model, df)
+=======
+            try:
+                test_model(model, X_test, y_test)
+            except Exception as e:
+                print("Failed to test model: ", e, "\n")
+>>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
 
         elif choice == '5':
             print("\nQuiting program, goodbye!")
-
             break
+
         else:
             print("Invalid choice. Please try again.")
 
