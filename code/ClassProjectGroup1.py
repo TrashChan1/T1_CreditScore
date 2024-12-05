@@ -458,41 +458,6 @@ def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.nd
 
     encoder = OneHotEncoder(handle_unknown='ignore')
 
-    # Constructing dataframe for modeling
-    features_for_model = ['Age', 'Annual_Income', 'Monthly_Balance'
-                          , 'Monthly_Inhand_Salary'
-                          , 'Num_Credit_Card', 'Credit_History_Age', 'Outstanding_Debt'
-                          , 'Interest_Rate', 'Credit_Utilization_Ratio'
-                          , 'Num_of_Loan', 'Num_of_Delayed_Payment'
-                          , 'Num_Bank_Accounts', 'Delay_from_due_date'
-                          , 'Total_EMI_per_month', 'Changed_Credit_Limit'
-
-                          , 'Credit_Mix_Bad', 'Credit_Mix_Good', 'Credit_Mix_Standard'
-
-                          , 'Payment_of_Min_Amount_NM', 'Payment_of_Min_Amount_No'
-                          , 'Payment_of_Min_Amount_Yes'
-
-                           , 'Occupation_Accountant', 'Occupation_Architect'
-                           , 'Occupation_Developer', 'Occupation_Doctor'
-                           , 'Occupation_Engineer', 'Occupation_Entrepreneur'
-                           , 'Occupation_Journalist', 'Occupation_Lawyer'
-                           , 'Occupation_Manager', 'Occupation_Mechanic'
-                           ,'Occupation_Media_Manager', 'Occupation_Musician'
-                           , 'Occupation_Scientist', 'Occupation_Teacher'
-                           , 'Occupation_Writer'
-                          ] 
-
-    target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
-
-    # Defining data sets
-    X = df[features_for_model].to_numpy()
-    y = df[target_features].to_numpy()
-
-    # Basic train-test split
-    # 80% training and 20% test 
-    X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.20, random_state=42)
-
-
     #Evaluate accuracy
     test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
     print('\nTest accuracy:', test_acc)
@@ -548,6 +513,7 @@ def main_menu():
                 df = handle_load_data()
                 df.info()
                 X_train, X_test, y_train, y_test = handle_train_test_split(df, 0.20)
+                print("training based on random 80% of loaded file, and testing on other 20%")
             except Exception as e:
                 print("file not loaded: ", e, "\n")
 
