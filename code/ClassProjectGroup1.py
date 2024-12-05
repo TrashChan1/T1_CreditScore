@@ -561,13 +561,17 @@ def main_menu():
                 print("Model not constructed: ", e, "\n")
 
         elif choice == '3':
-            print(model.summary())
-
+            try:
+                print(model.summary())
+            except Exception as e:
+                print("Error: ", e, "\n")
         elif choice == '4':
             print("\nTesting model")
             print("*************")
-            test_model(model, df)
-
+            try:
+                test_model(model, df)
+            except Exception as e:
+                print("Error testing Model: ", e, "\n")
         elif choice == '5':
             print("\nQuiting program, goodbye!")
 
