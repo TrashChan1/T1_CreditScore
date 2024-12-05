@@ -14,7 +14,7 @@ import numpy as np
 from tabulate import tabulate
 
 # visualization libraries
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 import seaborn as sns
 
 # extra libraries
@@ -190,13 +190,9 @@ def clean_data(df: pd.core.frame.DataFrame):
 
     # #### Monthly_Balance
 
-    #s = df['Monthly_Balance'].to_series()
     balance_frame = pd.to_numeric(df.Monthly_Balance, errors='coerce').dropna().to_frame()
     df.drop(columns='Monthly_Balance', inplace=True)
     df = pd.concat([df, balance_frame], axis=1)
-   # df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('__-333333333333333333333333333__', '')
-   # df['Monthly_Balance'] = df['Monthly_Balance'].str.replace('_', '')
-   # df['Monthly_Balance'][(df['Monthly_Balance'] == '')] = None
     df['Monthly_Balance'] = df['Monthly_Balance'].astype(float)
     df['Monthly_Balance'] =  df.groupby('Customer_ID')['Monthly_Balance'].fillna(method='ffill').fillna(method='bfill').astype(float)
 
@@ -357,12 +353,7 @@ def clean_data(df: pd.core.frame.DataFrame):
 
     return df
 
-<<<<<<< HEAD
-def construct_model(df: pd.core.frame.DataFrame):
-
-=======
 def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: np.ndarray):
->>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
     dropout = 0.2
     noise = 0.05
 
@@ -425,9 +416,6 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
 
     return model
 
-<<<<<<< HEAD
-def test_model(model: keras.models.Sequential, df: pd.core.frame.DataFrame):
-=======
 def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20):
     
     # Constructing dataframe for modeling
@@ -467,7 +455,6 @@ def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20
 
 
 def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.ndarray):
->>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
 
     encoder = OneHotEncoder(handle_unknown='ignore')
 
@@ -568,11 +555,7 @@ def main_menu():
             print("\nConstructing model based on input file")
             print("***************************************")
             try:
-<<<<<<< HEAD
-                model = construct_model(df)
-=======
                 model = construct_model(df, X_train, y_train)
->>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
             except Exception as e:
                 print("Model not constructed: ", e, "\n")
 
@@ -582,14 +565,10 @@ def main_menu():
         elif choice == '4':
             print("\nTesting model")
             print("*************")
-<<<<<<< HEAD
-            test_model(model, df)
-=======
             try:
                 test_model(model, X_test, y_test)
             except Exception as e:
                 print("Failed to test model: ", e, "\n")
->>>>>>> c4d224c (assigned train-test split to file load, rather than to train in order to make a more sensical work flow.)
 
         elif choice == '5':
             print("\nQuiting program, goodbye!")
