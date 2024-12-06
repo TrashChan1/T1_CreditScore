@@ -631,6 +631,7 @@ print(len(features_for_model))
 # Defining data sets
 X = df[features_for_model].to_numpy()
 y = df[target_features].to_numpy()
+y = df2[target_features].to_numpy()
 print(y)
 
 

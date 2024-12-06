@@ -14,7 +14,7 @@ import numpy as np
 from tabulate import tabulate
 
 # visualization libraries
-#from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt
 import seaborn as sns
 
 # extra libraries
@@ -131,7 +131,7 @@ def handle_load_data():
         # Default behavior scipped by else statement
         try:
             df, load_time = load_data(new_file)
-            df.info()
+            #df.info()
             try:
                 df, encoder = clean_data(df)
                 return df, encoder
@@ -360,7 +360,7 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     start_time = time.time()
 
     dropout = 0.2
-    noise = 0.05
+    noise = 0.03
 
     # ### Neural Network
 
@@ -421,7 +421,7 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     callback = keras.callbacks.EarlyStopping(monitor='loss',
                                                   patience=3)
 
-    model.fit(X_train, y_train, epochs = 256, batch_size = 512, callbacks=[callback])
+    model.fit(X_train, y_train, epochs = 256, batch_size = 512, verbose=0, callbacks=[callback])
 
     load_time = time.time() - start_time
     print(f"\nTime to train: {load_time:.2f} seconds")
@@ -466,77 +466,99 @@ def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20
     return X_train, X_test, y_train, y_test
 
 
-def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.ndarray):
+def calculate_performance_multiclass(y_true, y_pred):
+    # Calculates various performance metrics for multiclass classification.
 
-    encoder = OneHotEncoder(handle_unknown='ignore')
+    # Args:
+    #     y_true: The true labels.
+    #     y_pred: The predicted labels.
 
-    #Evaluate accuracy
-    test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
-    print('\nTest accuracy:', test_acc)
-    print('\nLoss:', test_loss)
+    # Returns:
+    #     A dictionary containing the calculated metrics.
+
+    metrics = {}
+
+    # Accuracy
+    metrics['accuracy'] = accuracy_score(y_true, y_pred)
+
+    # Precision, Recall, and F1-score (macro-averaged)
+    metrics['precision'] = precision_score(y_true, y_pred, average='macro')
+    metrics['recall'] = recall_score(y_true, y_pred, average='macro')
+    metrics['f1_score'] = f1_score(y_true, y_pred, average='macro')
+
+    # Confusion Matrix
+    metrics['confusion_matrix'] = confusion_matrix(y_true, y_pred)
+
+    return metrics
 
 
-    # 3 different credit scores. You can see the comparison between the trained and tested values
-    
-    # The following functionality is broken and needs fixed:
 
-#    # getting y_test values
-#   y_tested = encoder.inverse_transform(y_test)
-#
-#
-#   # getting the value of the predictions
-#   y_predicted = encoder.inverse_transform(predictions)
-#
-#   # printing the first 15 values of the test and predicted values 
-#   data = []
-#   for i in range(15):
-#       data.append([y_tested[i], y_predicted[i]])
-#
-#   headers = ["True Value", "Predicted Value"]
-#
-#   print(tabulate(data, headers=headers, tablefmt="grid"))
-#
+def test_model(y_test: np.ndarray, X_test: np.ndarray, model: keras.models.Sequential, encoder: OneHotEncoder):
 
-def make_predictions(y_test: np.ndarray, X_test: np.ndarray, model: keras.models.Sequential, encoder: OneHotEncoder):
-    
-    # Here's the predictions. I guess these need exported to a csv file, but IDK what for
-    # Format for the Predictions CSV should be ID, Credit_Score
+    print(f"[{get_current_time()}] Testing Model based on 20% of most recently loaded file.")
+    start_time = time.time()
+
+    class_labels=['Good', 'Poor', 'Standard']
 
     # the true credit_score values from the train_test split
     y_tested = encoder.inverse_transform(y_test)
 
     predictions = model.predict(X_test)
-    y_predicted = encoder.inverse_transform(predictions)
-    predDF = pd.DataFrame(y_predicted)
+    y_pred = encoder.inverse_transform(predictions)
+    predDF = pd.DataFrame(y_pred)
     predDF.to_csv("predictionClassProject1.csv")
+
+    #Evaluate accuracy
+    test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
+    metrics = calculate_performance_multiclass(y_tested, y_pred) 
+    test_acc = metrics['accuracy']
+    prec = metrics['precision']
+    f1 = metrics['f1_score']
+
+    print(f"[{get_current_time()}] Test accuracy:", test_acc)
+    print(f"[{get_current_time()}] Loss:", test_loss)
+    print(f"[{get_current_time()}] precision:", prec)
+    print(f"[{get_current_time()}] f1_score:", f1)
 
     # printing the first 15 values of the test and predicted values 
     data = []
     for i in range(15):
-        data.append([y_tested[i], y_predicted[i]])
+        data.append([y_tested[i], y_pred[i]])
 
     headers = ["True Value", "Predicted Value"]
 
     print(tabulate(data, headers=headers, tablefmt="grid"))
 
+    load_time = time.time() - start_time
+    print(f"\nTime to test: {load_time:.2f} seconds")
+
+    #TODO: Confusion matrix.
+
+    # Plot the confusion matrix
+    cm = metrics['confusion_matrix']
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=class_labels, yticklabels=class_labels)
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.show()
 
 def main_menu():
     while True:
         print("\nMain Menu")
         print("(1) Load data")
         print("(2) Train NN")
-        print("(3) Make Predictions")
-        print("(4) Test model")
-        print("(5) Quit")
+        print("(3) Test model")
+        print("(4) Quit")
         
-        choice = input("Enter your choice (1-5): ")
+        choice = input("Enter your choice (1-4): ")
 
         if choice == '1':
             try: 
                 df, encoder = handle_load_data()
-                df.info()
+                #df.info()
                 X_train, X_test, y_train, y_test = handle_train_test_split(df, 0.20)
-                print("training based on random 80% of loaded file, and testing on other 20%")
+                # print("training based on random 80% of loaded file, and testing on other 20%")
             except Exception as e:
                 print("file not loaded: ", e, "\n")
 
@@ -549,20 +571,14 @@ def main_menu():
                 print("Model not constructed: ", e, "\n")
 
         elif choice == '3':
-            print("\nGenerating Predictions")
-            try:
-                make_predictions(y_test, X_test, model, encoder)
-            except Exception as e:
-                print("Error: ", e, "\n")
-        elif choice == '4':
             print("\nTesting model")
             print("*************")
             try:
-                test_model(model, X_test, y_test)
+                test_model(y_test, X_test, model, encoder)
             except Exception as e:
                 print("Failed to test model: ", e, "\n")
 
-        elif choice == '5':
+        elif choice == '4':
             print("\nQuiting program, goodbye!")
             break
 

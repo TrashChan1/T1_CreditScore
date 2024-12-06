@@ -178,6 +178,7 @@ def plot_prediction_vs_test_categorical(y_test, y_pred, class_labels):
     #     class_labels (list): List of class labels.
 
     # Create a confusion matrix
+
     cm = confusion_matrix(y_test, y_pred)
 
     # Plot the confusion matrix
@@ -189,6 +190,7 @@ def plot_prediction_vs_test_categorical(y_test, y_pred, class_labels):
     plt.show()
 
 # Calculates performance of multivariate classification model
+
 def calculate_performance_multiclass(y_true, y_pred):
     # Calculates various performance metrics for multiclass classification.
 
