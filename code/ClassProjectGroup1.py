@@ -62,7 +62,6 @@ def load_data(file_name: str = "credit_score_data.csv", folder_name: str = "data
     """
     print("\nLoading and cleaning input data set:")
     print("************************************")
-    print(f"[{get_current_time()}] Starting Script")
     print(f"[{get_current_time()}] Loading training data set")
     
     # Start timing
@@ -134,8 +133,8 @@ def handle_load_data():
             df, load_time = load_data(new_file)
             df.info()
             try:
-                df = clean_data(df)
-                return df
+                df, encoder = clean_data(df)
+                return df, encoder
             except Exception as e:
                 print("\nFailed to clean file: ", e)
         except Exception as e:
@@ -158,6 +157,9 @@ def handle_load_data():
             print("Invalid choice. Please try again.")
             continue
 def clean_data(df: pd.core.frame.DataFrame):
+
+    print(f"[{get_current_time()}] Cleaning data set")
+    start_time = time.time()
 
     df.isna().sum()
 
@@ -351,7 +353,8 @@ def clean_data(df: pd.core.frame.DataFrame):
     df.drop(columns=continuous_features, inplace=True)
     df = pd.concat([df, encoded_scaled_df], axis=1)
 
-    return df
+    
+    return df, encoder
 
 def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: np.ndarray):
     dropout = 0.2
@@ -385,7 +388,7 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     # For classification tasks, we generally tend to add an activation function in the output ("sigmoid" for binary, and "softmax" for multi-class, etc.).
     model.add(keras.layers.Dense(3, activation="softmax"))
 
-    #print(model.summary())
+    print(model.summary())
 
     # Compile the Model
     ###################
@@ -464,16 +467,6 @@ def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.nd
     print('\nLoss:', test_loss)
 
 
-    # ## Make Predictions
-
-    # Make Predictions
-
-    # Here's the predictions. I guess these need exported to a csv file, but IDK what for
-    predictions = model.predict(X_test)
-    predDF = pd.DataFrame(predictions)
-    predDF.to_csv("predictions.csv")
-
-
     # 3 different credit scores. You can see the comparison between the trained and tested values
     
     # The following functionality is broken and needs fixed:
@@ -495,14 +488,35 @@ def test_model(model: keras.models.Sequential, X_test: np.ndarray, y_test: np.nd
 #   print(tabulate(data, headers=headers, tablefmt="grid"))
 #
 
+def make_predictions(y_test: np.ndarray, X_test: np.ndarray, model: keras.models.Sequential, encoder: OneHotEncoder):
+    
+    # Here's the predictions. I guess these need exported to a csv file, but IDK what for
+    # Format for the Predictions CSV should be ID, Credit_Score
+
+    # the true credit_score values from the train_test split
+    y_tested = encoder.inverse_transform(y_test)
+
+    predictions = model.predict(X_test)
+    y_predicted = encoder.inverse_transform(predictions)
+    predDF = pd.DataFrame(y_predicted)
+    predDF.to_csv("predictions.csv")
+
+    # printing the first 15 values of the test and predicted values 
+    data = []
+    for i in range(15):
+        data.append([y_tested[i], y_predicted[i]])
+
+    headers = ["True Value", "Predicted Value"]
+
+    print(tabulate(data, headers=headers, tablefmt="grid"))
 
 
 def main_menu():
     while True:
         print("\nMain Menu")
         print("(1) Load data")
-        print("(2) Process data")
-        print("(3) Model details")
+        print("(2) Train NN")
+        print("(3) Make Predictions")
         print("(4) Test model")
         print("(5) Quit")
         
@@ -510,7 +524,7 @@ def main_menu():
 
         if choice == '1':
             try: 
-                df = handle_load_data()
+                df, encoder = handle_load_data()
                 df.info()
                 X_train, X_test, y_train, y_test = handle_train_test_split(df, 0.20)
                 print("training based on random 80% of loaded file, and testing on other 20%")
@@ -518,16 +532,17 @@ def main_menu():
                 print("file not loaded: ", e, "\n")
 
         elif choice == '2':
-            print("\nConstructing model based on input file")
-            print("***************************************")
+            print("\nTraining Nueral Network based on input file")
+            print("*********************************************")
             try:
                 model = construct_model(df, X_train, y_train)
             except Exception as e:
                 print("Model not constructed: ", e, "\n")
 
         elif choice == '3':
+            print("\nGenerating Predictions")
             try:
-                print(model.summary())
+                make_predictions(y_test, X_test, model, encoder)
             except Exception as e:
                 print("Error: ", e, "\n")
         elif choice == '4':
