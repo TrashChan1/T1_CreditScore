@@ -161,9 +161,6 @@ def clean_data(df: pd.core.frame.DataFrame):
     print(f"[{get_current_time()}] Cleaning data set")
     start_time = time.time()
 
-    df.isna().sum()
-
-
     # ### Dropping some columns
 
     # Dropping not related columns
@@ -353,10 +350,15 @@ def clean_data(df: pd.core.frame.DataFrame):
     df.drop(columns=continuous_features, inplace=True)
     df = pd.concat([df, encoded_scaled_df], axis=1)
 
-    
+    print(f"[{get_current_time()}] Rows after cleaning: {len(df)}")
+    load_time = time.time() - start_time
+    print(f"\nTime to clean is: {load_time:.2f} seconds")
     return df, encoder
 
 def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: np.ndarray):
+    print(f"[{get_current_time()}] Constructing NN")
+    start_time = time.time()
+
     dropout = 0.2
     noise = 0.05
 
@@ -403,7 +405,11 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     model.compile(optimizer='adam',
                   loss=tf.keras.losses.CategoricalCrossentropy(),
                   metrics=['accuracy'])
-
+    
+    load_time = time.time() - start_time
+    print(f"\nTime to construct: {load_time:.2f} seconds")
+    start_time = time.time()
+    print(f"[{get_current_time()}] Training NN")
 
     # Train the Model
     #################
@@ -416,6 +422,9 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
                                                   patience=3)
 
     model.fit(X_train, y_train, epochs = 256, batch_size = 512, callbacks=[callback])
+
+    load_time = time.time() - start_time
+    print(f"\nTime to train: {load_time:.2f} seconds")
 
     return model
 
