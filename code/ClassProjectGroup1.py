@@ -499,7 +499,7 @@ def make_predictions(y_test: np.ndarray, X_test: np.ndarray, model: keras.models
     predictions = model.predict(X_test)
     y_predicted = encoder.inverse_transform(predictions)
     predDF = pd.DataFrame(y_predicted)
-    predDF.to_csv("predictions.csv")
+    predDF.to_csv("predictionClassProject1.csv")
 
     # printing the first 15 values of the test and predicted values 
     data = []
