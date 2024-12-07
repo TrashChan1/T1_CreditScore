@@ -222,6 +222,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     print(f"[{get_current_time()}] Cleaning data set")
     start_time = time.time()
 
+
     # ### Dropping some columns
 
     # Dropping not related columns
@@ -482,7 +483,7 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     callback = keras.callbacks.EarlyStopping(monitor='loss',
                                                   patience=3)
 
-    model.fit(X_train, y_train, epochs = 256, batch_size = 512, verbose=0, callbacks=[callback])
+    model.fit(X_train, y_train, epochs = 256, batch_size = 512, verbose=1, callbacks=[callback])
 
     load_time = time.time() - start_time
     print(f"\nTime to train: {load_time:.2f} seconds")
