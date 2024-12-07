@@ -1,3 +1,14 @@
+# course: cmps3500
+   # CLASS Project Group 1
+   # PYTHON IMPLEMENTATION: BASIC DATA ANALYSIS
+   # date: 12/05/2024
+   # Student 1: David Carter
+   # Student 2: Juan Garcia
+   # description: Implementation Basic Data Cleaning Routines
+                # Then train model based on that data cleaning.
+
+
+
 
 # General Packages
 import math
