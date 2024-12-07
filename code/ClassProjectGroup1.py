@@ -51,11 +51,11 @@ def get_current_time():
 def load_data(file_name: str = "credit_score_data.csv", folder_name: str = "data"):
     """
     Load data from the specified CSV file within the project directory.
-    
+
     Parameters:
         file_name (str): The name of the file to load
         folder_name (str): The folder where the data is stored
-    
+
     Returns:
         pd.DataFrame or None: The loaded DataFrame if successful, None if an error occurs
         float: Time taken to load the data
@@ -63,99 +63,147 @@ def load_data(file_name: str = "credit_score_data.csv", folder_name: str = "data
     print("\nLoading and cleaning input data set:")
     print("************************************")
     print(f"[{get_current_time()}] Loading training data set")
-    
+
     # Start timing
     start_time = time.time()
-    
+
     # Load the data
     current_dir = Path.cwd()
     data_folder = current_dir.parent / folder_name
     file_path = data_folder / file_name
-    
+
     # Check if file exists
     if not file_path.exists():
         raise Exception(f"File not found at '{file_path}'")
-        
+
     # Check file size
     file_size = os.path.getsize(file_path) / (1024 * 1024)  # Convert to MB
     if file_size > 1000:  # Example: 1GB limit
         raise Exception("File size ({file_size:.2f}MB) exceeds maximum allowed size")
-        
+
     # Check permissions
     if not os.access(file_path, os.R_OK):
         raise Exception("Permission denied - Cannot read file")
-        
+
     # Check if file is empty
     if file_size == 0:
         raise Exception("File is empty")
-        
+
     # Detect file encoding
     with open(file_path, 'rb') as file:
         raw_data = file.read()
         result = chardet.detect(raw_data)
         encoding = result['encoding']
-    
+
     # Try to load the CSV file
     df = pd.read_csv(file_path, encoding=encoding)
 
-    
+
     if df.empty:
         raise Exception("No data found in file")
-        
+
     # Basic format validation
     if len(df.columns) < 2:  # Assuming we expect at least 2 columns
         raise Exception("Invalid file format - Incorrect number of columns")
-    
+
     # Calculate loading time
     load_time = time.time() - start_time
-    
+
     # Print the required information
     print(f"[{get_current_time()}] Total Columns Read: {len(df.columns)}")
     print(f"[{get_current_time()}] Total Rows Read: {len(df)}")
     print(f"\nTime to load is: {load_time:.2f} seconds")
-    
+
     return df, load_time
+
+def list_available_files(folder_name: str = "data"):
+    """
+    List all CSV files available in the specified folder.
+
+    Parameters:
+        folder_name (str): The folder to search for files
+
+    Returns:
+        list: List of CSV files in the folder
+    """
+    current_dir = Path.cwd()
+    data_folder = current_dir.parent / folder_name
+
+    # Check if folder exists
+    if not data_folder.exists():
+        print(f"\nWarning: Folder '{folder_name}' not found!")
+        return []
+
+    # Get all CSV files
+    csv_files = list(data_folder.glob('*.csv'))
+
+    if not csv_files:
+        print(f"\nNo CSV files found in '{folder_name}' folder!")
+        return []
+
+    return csv_files
+
 
 def handle_load_data():
     """
     Handle the load data menu option with retry capabilities.
-    
+
     Returns:
         pd.DataFrame or None: The loaded DataFrame if successful, None if user chooses to return to menu
     """
-    
-    new_file = input("Enter the name of the file to load: ")
-
     while True:
+        # List available files
+        print("\nAvailable CSV files:")
+        csv_files = list_available_files()
 
-        # Default behavior scipped by else statement
+        if not csv_files:
+            print("\nPlease add CSV files to the data folder and try again.")
+            return None
+
+        # Print files with numbers for selection
+        for i, file in enumerate(csv_files, 1):
+            print(f"({i}) {file.name}")
+
+        print("\nEnter the number of the file to load or type the filename directly:")
+        file_input = input("Your choice: ")
+
+        # Check if input is a number for file selection
         try:
-            df, load_time = load_data(new_file)
-            #df.info()
-            try:
-                df, encoder = clean_data(df)
-                return df, encoder
-            except Exception as e:
-                print("\nFailed to clean file: ", e)
-        except Exception as e:
-            print("\nFailed to load file: ", e)
+            if file_input.isdigit() and 1 <= int(file_input) <= len(csv_files):
+                new_file = csv_files[int(file_input)-1].name
+            else:
+                new_file = file_input
 
-        print("\nWhat would you like to do?")
-        print("(1) Try loading the same file again")
-        print("(2) Try loading a different file")
-        print("(3) Return to main menu")
-        
-        choice = input("Enter your choice (1-3): ")
-        
-        if choice == '1':
-            pass
-        elif choice == '2':
-            new_file = input("Enter the name of the file to load: ")
-        elif choice == '3':
-            raise Exception("File not loaded")
-        else:
-            print("Invalid choice. Please try again.")
-            continue
+            try:
+                df, load_time = load_data(new_file)
+                try:
+                    df, encoder = clean_data(df)
+                    return df, encoder
+                except Exception as e:
+                    print("\nFailed to clean file: ", e)
+            except Exception as e:
+                print("\nFailed to load file: ", e)
+
+            print("\nWhat would you like to do?")
+            print("(1) Try loading the same file again")
+            print("(2) Try loading a different file")
+            print("(3) Return to main menu")
+
+            choice = input("Enter your choice (1-3): ")
+
+            if choice == '1':
+                continue
+            elif choice == '2':
+                continue
+            elif choice == '3':
+                raise Exception("File not loaded")
+            else:
+                print("Invalid choice. Please try again.")
+                continue
+
+        except ValueError:
+            print("\nInvalid input. Please enter a valid number or filename.")
+            
 def clean_data(df: pd.core.frame.DataFrame):
 
     print(f"[{get_current_time()}] Cleaning data set")
@@ -205,7 +253,7 @@ def clean_data(df: pd.core.frame.DataFrame):
 
     # #### Total_EMI_per_month
     df['Total_EMI_per_month'] = df['Total_EMI_per_month'].astype(float)
-    df['Total_EMI_per_month'][(df['Total_EMI_per_month'] > 600) | (df['Total_EMI_per_month'] <= 0)] = np.nan 
+    df['Total_EMI_per_month'][(df['Total_EMI_per_month'] > 600) | (df['Total_EMI_per_month'] <= 0)] = np.nan
     df['Total_EMI_per_month'] =  df.groupby('Customer_ID')['Total_EMI_per_month'].fillna(method='ffill').fillna(method='bfill').astype(float)
 
     # #### Delay_from_due_date
@@ -214,7 +262,7 @@ def clean_data(df: pd.core.frame.DataFrame):
 
     # #### Num_Bank_Accounts
     df['Num_Bank_Accounts'] = df['Num_Bank_Accounts'].astype(int)
-    df['Num_Bank_Accounts'][(df['Num_Bank_Accounts'] > 70) | (df['Num_Bank_Accounts'] <= 0)] = np.nan 
+    df['Num_Bank_Accounts'][(df['Num_Bank_Accounts'] > 70) | (df['Num_Bank_Accounts'] <= 0)] = np.nan
     df['Num_Bank_Accounts'] =  df.groupby('Customer_ID')['Num_Bank_Accounts'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
     # #### Payment_of_Min_Amount
@@ -223,7 +271,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     # #### Num_of_Loan
     df['Num_of_Loan'] = df['Num_of_Loan'].str.replace('_', '')
     df['Num_of_Loan'] = df['Num_of_Loan'].astype(int)
-    df['Num_of_Loan'][(df['Num_of_Loan'] > 100) | (df['Num_of_Loan'] <= 0)] = np.nan 
+    df['Num_of_Loan'][(df['Num_of_Loan'] > 100) | (df['Num_of_Loan'] <= 0)] = np.nan
     df['Num_of_Loan'] =  df.groupby('Customer_ID')['Num_of_Loan'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
     # #### Credit_History_Age
@@ -234,7 +282,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     df['Num_of_Delayed_Payment'] = df['Num_of_Delayed_Payment'].str.replace('_', '')
     df['Num_of_Delayed_Payment'] =  df.groupby('Customer_ID')['Num_of_Delayed_Payment'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
-    df['Num_of_Delayed_Payment'][(df['Num_of_Delayed_Payment'] > 18) | (df['Num_of_Delayed_Payment'] <= 0)] = np.nan 
+    df['Num_of_Delayed_Payment'][(df['Num_of_Delayed_Payment'] > 18) | (df['Num_of_Delayed_Payment'] <= 0)] = np.nan
 
     df['Num_of_Delayed_Payment'] =  df.groupby('Customer_ID')['Num_of_Delayed_Payment'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
@@ -249,14 +297,14 @@ def clean_data(df: pd.core.frame.DataFrame):
     # #### Age
 
     # Extracting non-numeric textual data
-    df['Age'][~df['Age'].str.isnumeric()].unique() 
+    df['Age'][~df['Age'].str.isnumeric()].unique()
     df['Age'] = df['Age'].str.replace('_', '')
 
     # cast column to integer
     df['Age'] = df['Age'].astype(int)
 
     # Lets set any inappropriate value which is not at all possible like negative and high positive values above 100 to null for now.
-    df['Age'][(df['Age'] > 100) | (df['Age'] <= 0)] = np.nan 
+    df['Age'][(df['Age'] > 100) | (df['Age'] <= 0)] = np.nan
 
     df['Age'] =  df.groupby('Customer_ID')['Age'].fillna(method='ffill').fillna(method='bfill').astype(int)
 
@@ -267,7 +315,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     df['Occupation'] = df['Occupation'].astype("string")
 
     # ### Annual_Income
-    df['Annual_Income'][~df['Annual_Income'].str.fullmatch('([0-9]*[.])?[0-9]+')].unique() 
+    df['Annual_Income'][~df['Annual_Income'].str.fullmatch('([0-9]*[.])?[0-9]+')].unique()
     df['Annual_Income'] = df['Annual_Income'].str.replace('_', '')
     df['Annual_Income'] = df['Annual_Income'].astype(float)
     df.loc[df['Annual_Income'] > 180000, 'Annual_Income'] = pd.NA
@@ -310,7 +358,7 @@ def clean_data(df: pd.core.frame.DataFrame):
                            , 'Num_of_Loan', 'Num_of_Delayed_Payment'
                            , 'Num_Bank_Accounts', 'Delay_from_due_date'
                            , 'Total_EMI_per_month', 'Changed_Credit_Limit'
-                           ] 
+                           ]
     categorical_features = ['Occupation', 'Credit_Mix', 'Payment_of_Min_Amount']
 
     # Encoder for input features
@@ -326,7 +374,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     # Convert the encoded data back to a DataFrame:
     encoded_df = pd.DataFrame(encoded_features.toarray(), columns=encoder.get_feature_names_out(categorical_features))
 
-    # joining dataframes 
+    # joining dataframes
     df = pd.concat([df, encoded_df], axis=1)
 
     ## TARGET FEATURES
@@ -336,7 +384,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     # Convert the encoded data back to a DataFrame:
     encoded_target_df = pd.DataFrame(encoded_target.toarray(), columns=encoder.get_feature_names_out(target))
 
-    # joining dataframes 
+    # joining dataframes
     df = pd.concat([df, encoded_target_df], axis=1)
 
     ## INPUT CONTINUOUS FEATURES
@@ -346,7 +394,7 @@ def clean_data(df: pd.core.frame.DataFrame):
     # Convert the scaled data back to a DataFrame:
     encoded_scaled_df = pd.DataFrame(scaled_features, columns=scaler.get_feature_names_out(continuous_features))
 
-    # joining dataframes 
+    # joining dataframes
     df.drop(columns=continuous_features, inplace=True)
     df = pd.concat([df, encoded_scaled_df], axis=1)
 
@@ -405,7 +453,7 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     model.compile(optimizer='adam',
                   loss=tf.keras.losses.CategoricalCrossentropy(),
                   metrics=['accuracy'])
-    
+
     load_time = time.time() - start_time
     print(f"\nTime to construct: {load_time:.2f} seconds")
     start_time = time.time()
@@ -429,7 +477,7 @@ def construct_model(df: pd.core.frame.DataFrame, X_train: np.ndarray, y_train: n
     return model
 
 def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20):
-    
+
     # Constructing dataframe for modeling
     features_for_model = ['Age', 'Annual_Income', 'Monthly_Balance'
                           , 'Monthly_Inhand_Salary'
@@ -452,7 +500,7 @@ def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20
                            ,'Occupation_Media_Manager', 'Occupation_Musician'
                            , 'Occupation_Scientist', 'Occupation_Teacher'
                            , 'Occupation_Writer'
-                          ] 
+                          ]
 
     target_features = ['Credit_Score_Good', 'Credit_Score_Poor', 'Credit_Score_Standard']
 
@@ -461,7 +509,7 @@ def handle_train_test_split(df: pd.core.frame.DataFrame, test_size: float = 0.20
     y = df[target_features].to_numpy()
 
     # Basic train-test split
-    # 80% training and 20% test 
+    # 80% training and 20% test
     X_train, X_test, y_train, y_test = train_test_split(X, y , test_size=0.20, random_state=42)
     return X_train, X_test, y_train, y_test
 
@@ -510,7 +558,7 @@ def test_model(y_test: np.ndarray, X_test: np.ndarray, model: keras.models.Seque
 
     #Evaluate accuracy
     test_loss, test_acc = model.evaluate(X_test,  y_test, verbose=2)
-    metrics = calculate_performance_multiclass(y_tested, y_pred) 
+    metrics = calculate_performance_multiclass(y_tested, y_pred)
     test_acc = metrics['accuracy']
     prec = metrics['precision']
     f1 = metrics['f1_score']
@@ -520,7 +568,7 @@ def test_model(y_test: np.ndarray, X_test: np.ndarray, model: keras.models.Seque
     print(f"[{get_current_time()}] precision:", prec)
     print(f"[{get_current_time()}] f1_score:", f1)
 
-    # printing the first 15 values of the test and predicted values 
+    # printing the first 15 values of the test and predicted values
     data = []
     for i in range(15):
         data.append([y_tested[i], y_pred[i]])
@@ -550,11 +598,11 @@ def main_menu():
         print("(2) Train NN")
         print("(3) Test model")
         print("(4) Quit")
-        
+
         choice = input("Enter your choice (1-4): ")
 
         if choice == '1':
-            try: 
+            try:
                 df, encoder = handle_load_data()
                 #df.info()
                 X_train, X_test, y_train, y_test = handle_train_test_split(df, 0.20)
@@ -587,5 +635,3 @@ def main_menu():
 
 if __name__ == "__main__":
     main_menu()
-
-
