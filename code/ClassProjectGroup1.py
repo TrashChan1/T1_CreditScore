@@ -3,7 +3,9 @@
    # PYTHON IMPLEMENTATION: BASIC DATA ANALYSIS
    # date: 12/05/2024
    # Student 1: David Carter
-   # Student 2: Juan Garcia
+   # Student 2: Aaron Pacheco
+   # Student 3: Daniel Rivera
+   # Student 4: Mihail Chitorog
    # description: Implementation Basic Data Cleaning Routines
                 # Then train model based on that data cleaning.
 
